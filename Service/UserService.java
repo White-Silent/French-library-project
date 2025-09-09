@@ -1,3 +1,4 @@
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class UserService {
@@ -25,11 +26,33 @@ public class UserService {
         userDAO.addUser(user);
     }
 
+    //Creation of the User
+    private User buildUserFromResultSet(ResultSet rs) throws SQLException {
+        Role role = Role.fromDbValue(rs.getString("role"));
+        User user = new User(
+                rs.getString("username"),
+                rs.getString("password"),
+                role,
+                rs.getString("visa")
+        );
+        user.setId(rs.getInt("id"));
+        return user;
+    }
+
+
     public User getUserById(int id) throws SQLException {
         return userDAO.getUserById(id);
     }
 
+    public User getUserByUsername(String username) throws SQLException {
+        return userDAO.getUserByUsername(username);
+    }
+
     public User authenticate(String username, String password, Role role, String visa) throws SQLException {
-        User user = userDAO.getUserById()
+        User user = userDAO.getUserByUsername(username);
+        if (user != null && user.getPassword().equals(password) && user.getRole() == role){
+            return user;
+        }
+        return null;
     }
 }

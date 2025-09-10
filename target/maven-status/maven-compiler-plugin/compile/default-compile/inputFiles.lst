@@ -1,0 +1,13 @@
+/home/raphael/Library-project/src/main/java/com/libraryproject/LibraryWebApplication.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/controller/AutoController.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/dao/BookDAO.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/dao/BorrowDAO.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/dao/UserDAO.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/enums/BorrowStatus.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/enums/Role.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/model/Book.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/model/Borrow.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/model/User.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/service/BookService.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/service/BorrowService.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/service/UserService.java

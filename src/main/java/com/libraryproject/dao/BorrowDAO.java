@@ -45,7 +45,6 @@ public class BorrowDAO {
         }
     }
 
-
     //Helper method
     private Borrow mapResultSetToBorrow(ResultSet rs) throws SQLException {
         int userId = rs.getInt("user_id");

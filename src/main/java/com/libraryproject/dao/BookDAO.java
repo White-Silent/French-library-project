@@ -56,6 +56,20 @@ public class BookDAO {
         }
     }
 
+    //Retrieve an exact book
+    public Book getBookByExactTitle(String title) throws SQLException {
+        String sql = "SELECT * FROM books WHERE title = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, title);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToBook(rs);
+                }
+            }
+        }
+        return null;
+    }
+
     //Read (Get all books)
     //Retrieve all books currenty stored in the database
     //It doesn't create anything, it just reads existing data

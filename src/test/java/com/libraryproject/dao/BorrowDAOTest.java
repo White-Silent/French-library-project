@@ -87,6 +87,4 @@ public class BorrowDAOTest {
         Assertions.assertEquals(BorrowStatus.RETURNED, returned.getStatus());
         Assertions.assertEquals(today, returned.getReturnDate());
     }
-
-    User user = new User("raphael", "1234", Role.ADMIN, "visa123");
 }

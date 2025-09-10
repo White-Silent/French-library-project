@@ -9,6 +9,7 @@ import com.libraryproject.model.User;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.List;
 
 public class BorrowService {
     //Attribute
@@ -39,5 +40,10 @@ public class BorrowService {
     public void returnBook(int borrowId) throws SQLException {
         LocalDate today = LocalDate.now();
         borrowDAO.returnBook(borrowId, today);
+    }
+
+    //Get BorrowByUser ID
+    public List<Borrow> getBorrowByUser(int userId) throws SQLException {
+        return borrowDAO.getBorrowsByUser(userId);
     }
 }

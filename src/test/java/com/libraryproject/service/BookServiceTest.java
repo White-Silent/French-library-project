@@ -5,6 +5,7 @@ import com.libraryproject.dao.UserDAO;
 import com.libraryproject.enums.Role;
 import com.libraryproject.model.Book;
 import com.libraryproject.model.User;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,15 +22,15 @@ public class BookServiceTest {
     private User reader;
     private BookDAO bookDAO;
 
+    private Connection connection;
     @BeforeEach
     void setup() throws Exception {
-        Connection connection = DriverManager.getConnection(
+        connection = DriverManager.getConnection(
                 "jdbc:mysql://192.168.101.214:3306/bibliotheque_test",
                 "javauser",
                 "Daumesnil504!"
         );
         bookDAO = new BookDAO(connection);
-        UserDAO userDAO = new UserDAO(connection);
         bookService = new BookService(bookDAO);
 
         //Vider la table avant
@@ -38,6 +39,14 @@ public class BookServiceTest {
         //Create a new user
         admin = new User("adminTest", "password", Role.ADMIN, null);
         reader = new User("readerTest", "password", Role.READER, null);
+    }
+
+
+    @AfterEach
+    void tearDown() throws Exception {
+        if (connection != null && !connection.isClosed()){
+            connection.close();
+        }
     }
 
     @Test

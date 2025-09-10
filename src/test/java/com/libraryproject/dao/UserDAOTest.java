@@ -29,7 +29,7 @@ class UserDAOTest {
     void setupUser() throws SQLException {
         //Setup de base
         connection = DriverManager.getConnection(
-                "jdbc:mysql://192.168.101.39:3306/bibliotheque_test",
+                "jdbc:mysql://192.168.101.214:3306/bibliotheque_test",
                 "javauser",
                 "Daumesnil504!"
         );

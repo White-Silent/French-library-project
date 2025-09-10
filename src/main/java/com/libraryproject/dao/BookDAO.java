@@ -34,6 +34,11 @@ public class BookDAO {
             ps.setString(7, book.getPublicationDate());
             ps.setString(8, book.getDescription());
             ps.executeUpdate();
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()){
+                if (generatedKeys.next()){
+                    book.setId(generatedKeys.getInt(1)); // <- test utilise book.getId()
+                }
+            }
         }
     }
 

@@ -26,7 +26,7 @@ public class BorrowDAOTest {
 
     @BeforeAll
     static void setUpDatabase() throws SQLException {
-        String url = "jdbc:mysql://192.168.101.39:3306/bibliotheque_test";
+        String url = "jdbc:mysql://192.168.101.214:3306/bibliotheque_test";
         String user = "javauser";
         String password = "Daumesnil504!";
         connection = DriverManager.getConnection(url, user, password);

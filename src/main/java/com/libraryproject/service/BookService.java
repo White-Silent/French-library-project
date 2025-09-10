@@ -26,6 +26,11 @@ public class BookService {
         bookDAO.addBook(book);
     }
 
+    //GetBookIdByID
+    public Book getBookById(int id) throws SQLException {
+        return bookDAO.getBookById(id);
+    }
+
     //Update a book ( Only for the director too)
     public void updateBook(Book book, User user) throws SQLException{
         if (user.getRole() == Role.READER){
@@ -48,12 +53,12 @@ public class BookService {
     }
 
     //Search book by title - it may throw an exception - bookDAO are checking exceptions
-    public List<Book> findBookByTitle(String title, User user) throws  SQLException{
+    public List<Book> findBookByTitle(String title) throws  SQLException{
         return bookDAO.findBookByTitle(title);
     }
 
     //Search book by author - it may throw an exception
-    public List<Book> findBookByAuthor(String author, User user) throws SQLException{
+    public List<Book> findBookByAuthor(String author) throws SQLException{
         return bookDAO.findBookByAuthor(author);
     }
 }

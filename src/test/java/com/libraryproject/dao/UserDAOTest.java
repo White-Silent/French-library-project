@@ -21,7 +21,7 @@ class UserDAOTest {
     private UserDAO userDAO;
 
 
-    //Sotck les visa pour les tests
+    //Stock les visa pour les tests
     private String readerVisa;
     private String adminVisa;
 

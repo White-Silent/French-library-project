@@ -54,7 +54,7 @@ public class UserService {
         return userDAO.getUserByUsername(username);
     }
 
-    public User authenticate(String username, String password, Role role) throws SQLException {
+    public User authentificate(String username, String password, Role role) throws SQLException {
         User user = userDAO.getUserByUsername(username);
         if (user != null && user.getPassword().equals(password) && user.getRole() == role){
             return user;

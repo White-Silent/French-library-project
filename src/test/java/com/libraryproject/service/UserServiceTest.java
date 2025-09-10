@@ -4,7 +4,6 @@ import com.libraryproject.dao.UserDAO;
 import com.libraryproject.enums.Role;
 import com.libraryproject.model.User;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

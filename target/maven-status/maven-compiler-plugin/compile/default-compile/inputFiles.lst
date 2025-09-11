@@ -1,5 +1,7 @@
 /home/raphael/Library-project/src/main/java/com/libraryproject/LibraryWebApplication.java
-/home/raphael/Library-project/src/main/java/com/libraryproject/controller/AutoController.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/controller/BookController.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/controller/BorrowController.java
+/home/raphael/Library-project/src/main/java/com/libraryproject/controller/LoginController.java
 /home/raphael/Library-project/src/main/java/com/libraryproject/dao/BookDAO.java
 /home/raphael/Library-project/src/main/java/com/libraryproject/dao/BorrowDAO.java
 /home/raphael/Library-project/src/main/java/com/libraryproject/dao/UserDAO.java

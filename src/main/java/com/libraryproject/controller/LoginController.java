@@ -13,7 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpSession;
 
 @Controller
-public class AutoController {
+public class LoginController {
 
     @Autowired
     private UserService userService;
@@ -46,10 +46,13 @@ public class AutoController {
 
         String generatedVisa = (String) session.getAttribute("generatedVisa");
 
+        /*
         if (!visa.equals(generatedVisa)) {
             redirectAttributes.addFlashAttribute("error", "Visa incorrect. Nouveau code généré.");
             return "redirect:/login";
         }
+
+         */
 
         try {
             User user = userService.authentificate(username, password, role);

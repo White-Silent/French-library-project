@@ -69,6 +69,13 @@
             font-size: 0.9rem;
             font-weight: 600;
         }
+        .category-badge {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -109,7 +116,7 @@
     </div>
 
     <!-- Formulaire de recherche -->
-    <div class="search-card">
+    <div class="card search-card">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">
                 <i class="bi bi-funnel me-2"></i>
@@ -141,30 +148,33 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-12">
+                    <div class="col-12 d-flex justify-content-between align-items-center">
                         <small class="text-muted">
                             <i class="bi bi-info-circle me-1"></i>
                             Remplissez au moins un des champs pour effectuer une recherche
                         </small>
+                        <a href="/books/search" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            Réinitialiser
+                        </a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Résultats de recherche -->
+    <!-- Résultats de recherche OU tous les livres -->
     <div th:if="${books != null}">
         <div class="results-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">
-                    <i class="bi bi-search-heart me-2"></i>
-                    Résultats de recherche
+                    <i th:class="${searchType != null} ? 'bi bi-search-heart me-2' : 'bi bi-journal-bookmark me-2'"></i>
+                    <span th:if="${searchType != null}" th:text="'Résultats pour: ' + ${searchType}"></span>
+                    <span th:if="${searchType == null}">Tous les livres disponibles</span>
                     <span class="badge bg-primary ms-2" th:text="${books.size()}"></span>
                 </h4>
-                <span class="text-muted" th:if="${param.title != null or param.author != null}">
-                    Recherche pour:
-                    <span th:if="${param.title != null}" class="badge bg-info" th:text="'Titre: ' + ${param.title}"></span>
-                    <span th:if="${param.author != null}" class="badge bg-info ms-1" th:text="'Auteur: ' + ${param.author}"></span>
+                <span class="text-muted" th:if="${searchTerm != null}">
+                    Recherche: <span class="badge bg-info" th:text="${searchTerm}"></span>
                 </span>
             </div>
         </div>
@@ -176,30 +186,56 @@
                     <div class="card book-card h-100">
                         <div class="card-header bg-transparent">
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="badge"
-                                      th:classappend="${book.available} ? 'bg-success' : 'bg-danger'"
-                                      th:text="${book.available} ? 'Disponible' : 'Emprunté'"></span>
-                                <span class="book-price" th:text="'€' + ${#numbers.formatDecimal(book.price, 1, 2)}"></span>
+                                <span class="category-badge" th:text="${book.category}">Catégorie</span>
+                                <span class="book-price" th:if="${book.price > 0}" th:text="'€' + ${#numbers.formatDecimal(book.price, 1, 2)}">€0.00</span>
+                                <span class="badge bg-success" th:if="${book.price == 0}">Gratuit</span>
                             </div>
                         </div>
                         <div class="card-body">
-                            <h5 class="card-title" th:text="${book.title}"></h5>
-                            <h6 class="card-subtitle mb-2 text-muted" th:text="${book.author}"></h6>
+                            <h5 class="card-title" th:text="${book.title}">Titre du livre</h5>
+                            <h6 class="card-subtitle mb-2 text-primary" th:text="${book.author}">Auteur</h6>
+
+                            <!-- Informations du livre -->
                             <p class="card-text">
-                                <small class="text-muted" th:text="${book.isbn} ? 'ISBN: ' + ${book.isbn} : 'ISBN non disponible'"></small>
+                                <small class="text-muted">
+                                    <i class="bi bi-building me-1"></i>
+                                    <span th:text="${book.publisher != null and not #strings.isEmpty(book.publisher)} ? ${book.publisher} : 'Éditeur non spécifié'">Éditeur</span>
+                                </small>
                             </p>
-                            <p class="card-text" th:if="${book.publicationYear != null}">
-                                <small class="text-muted">Année: <span th:text="${book.publicationYear}"></span></small>
+
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="bi bi-translate me-1"></i>
+                                    <span th:text="${book.language}">Langue</span>
+                                </small>
+                            </p>
+
+                            <p class="card-text" th:if="${book.publicationDate != null and not #strings.isEmpty(book.publicationDate)}">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar me-1"></i>
+                                    Publié: <span th:text="${book.publicationDate}">Date</span>
+                                </small>
+                            </p>
+
+                            <!-- Description (tronquée) -->
+                            <p class="card-text" th:if="${book.description != null and not #strings.isEmpty(book.description)}">
+                                <span th:text="${#strings.length(book.description) > 100} ? ${#strings.substring(book.description, 0, 100) + '...'} : ${book.description}">Description</span>
                             </p>
                         </div>
                         <div class="card-footer bg-transparent">
                             <div class="d-flex gap-2">
-                                <a th:href="@{'/books/details/' + ${book.id}}" class="btn btn-outline-primary btn-sm flex-fill">
+                                <!-- Bouton détails (pour tous les utilisateurs) -->
+                                <button class="btn btn-outline-primary btn-sm flex-fill"
+                                        data-bs-toggle="modal"
+                                        th:data-bs-target="'#bookModal' + ${book.id}">
                                     <i class="bi bi-eye me-1"></i>Détails
-                                </a>
+                                </button>
+
+                                <!-- Bouton édition (admin seulement) -->
                                 <a th:if="${user != null and user.role.name() == 'ADMIN'}"
                                    th:href="@{'/books/edit/' + ${book.id}}"
-                                   class="btn btn-outline-secondary btn-sm">
+                                   class="btn btn-outline-secondary btn-sm"
+                                   title="Modifier ce livre">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                             </div>
@@ -211,12 +247,17 @@
 
         <!-- Aucun résultat -->
         <div th:if="${#lists.isEmpty(books)}" class="text-center py-5">
-        <i class="bi bi-search display-1 text-muted"></i>
+            <i class="bi bi-search display-1 text-muted"></i>
             <h4 class="text-muted mt-3">Aucun livre trouvé</h4>
             <p class="text-muted">Aucun résultat ne correspond à vos critères de recherche.</p>
-            <a href="/books/search" class="btn btn-primary">
-                <i class="bi bi-arrow-clockwise me-2"></i>Nouvelle recherche
-            </a>
+            <div class="d-flex gap-2 justify-content-center">
+                <a href="/books/search" class="btn btn-primary">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Nouvelle recherche
+                </a>
+                <a th:if="${user != null and user.role.name() == 'ADMIN'}" href="/books/add" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-2"></i>Ajouter un livre
+                </a>
+            </div>
         </div>
     </div>
 
@@ -225,6 +266,64 @@
         <i class="bi bi-journal-bookmark display-1 text-primary"></i>
         <h3 class="text-primary mt-3">Explorez notre collection</h3>
         <p class="text-muted">Utilisez le formulaire ci-dessus pour rechercher des livres par titre ou auteur.</p>
+        <p class="text-muted">Ou cliquez sur le bouton ci-dessous pour voir tous les livres disponibles.</p>
+        <a href="/books/search?showAll=true" class="btn btn-primary">
+            <i class="bi bi-journal-bookmark me-2"></i>Voir tous les livres
+        </a>
+    </div>
+</div>
+
+<!-- Modals pour les détails des livres -->
+<div th:each="book : ${books}" th:if="${books != null and not #lists.isEmpty(books)}">
+    <div class="modal fade" th:id="'bookModal' + ${book.id}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-journal-text me-2"></i>
+                        <span th:text="${book.title}">Titre</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Informations générales</h6>
+                            <p><strong>Auteur:</strong> <span th:text="${book.author}">Auteur</span></p>
+                            <p><strong>Catégorie:</strong> <span class="badge bg-info" th:text="${book.category}">Catégorie</span></p>
+                            <p><strong>Langue:</strong> <span th:text="${book.language}">Langue</span></p>
+                            <p th:if="${book.publisher != null and not #strings.isEmpty(book.publisher)}">
+                                <strong>Éditeur:</strong> <span th:text="${book.publisher}">Éditeur</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Détails</h6>
+                            <p><strong>Prix:</strong>
+                                <span th:if="${book.price > 0}" th:text="${book.price + ' €'}">0 €</span>
+                                <span th:if="${book.price == 0}" class="text-success">Gratuit</span>
+                            </p>
+                            <p th:if="${book.publicationDate != null and not #strings.isEmpty(book.publicationDate)}">
+                                <strong>Date de publication:</strong> <span th:text="${book.publicationDate}">Date</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div th:if="${book.description != null and not #strings.isEmpty(book.description)}">
+                        <h6 class="text-muted mt-3">Description</h6>
+                        <p th:text="${book.description}">Description complète du livre</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Fermer
+                    </button>
+                    <a th:if="${user != null and user.role.name() == 'ADMIN'}"
+                       th:href="@{'/books/edit/' + ${book.id}}"
+                       class="btn btn-warning">
+                        <i class="bi bi-pencil me-2"></i>Modifier
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

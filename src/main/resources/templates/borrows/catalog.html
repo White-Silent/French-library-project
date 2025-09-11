@@ -1,10 +1,284 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catalogue - Bibliothèque</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .page-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .book-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .book-price {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .borrow-btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            transition: transform 0.2s ease;
+            padding: 0.5rem 1rem;
+        }
+        .borrow-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            color: white;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: none;
+            margin-bottom: 2rem;
+        }
+        .filter-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: none;
+            margin-bottom: 2rem;
+        }
+        .category-badge {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .category-badge:hover {
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 <body>
+<!-- Navigation -->
+<div th:replace="fragments/navbar :: navbar"></div>
 
+<!-- Page Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="mb-0">
+                    <i class="bi bi-book me-2"></i>
+                    Catalogue des livres
+                </h1>
+                <p class="mb-0 opacity-75">Découvrez et empruntez vos livres préférés</p>
+            </div>
+            <div class="col-auto">
+                <div class="d-flex gap-2">
+                    <a href="/borrows/my" class="btn btn-light">
+                        <i class="bi bi-bookmark-heart me-2"></i>Mes emprunts
+                    </a>
+                    <a href="/books/search" class="btn btn-outline-light">
+                        <i class="bi bi-search me-2"></i>Recherche avancée
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Messages -->
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="stats-card">
+        <div class="card-body">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <div class="p-3">
+                        <i class="bi bi-journal-bookmark display-4 text-primary"></i>
+                        <h4 class="mt-2" th:text="${books != null ? #lists.size(books) : 0}"></h4>
+                        <p class="text-muted mb-0">Livres disponibles</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3">
+                        <i class="bi bi-bookmark-heart display-4 text-success"></i>
+                        <h4 class="mt-2">
+                            <span th:text="${user != null ? 'Mes emprunts' : '0'}"></span>
+                        </h4>
+                        <p class="text-muted mb-0">
+                            <a href="/borrows/my" class="text-decoration-none">Voir mes emprunts</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3">
+                        <i class="bi bi-search display-4 text-info"></i>
+                        <h4 class="mt-2">Recherche</h4>
+                        <p class="text-muted mb-0">
+                            <a href="/books/search" class="text-decoration-none">Recherche avancée</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres rapides par catégorie -->
+    <div class="filter-card" th:if="${books != null and #lists.size(books) > 0}">
+        <div class="card-header bg-light">
+            <h6 class="mb-0">
+                <i class="bi bi-funnel me-2"></i>Filtrer par catégorie
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+                    <span class="badge bg-primary category-badge" onclick="filterBooks('all')">
+                        Tous les livres
+                    </span>
+                <!-- Les catégories seront générées dynamiquement par JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des livres -->
+    <div th:if="${books != null and #lists.size(books) > 0}">
+        <div class="row" id="books-container">
+            <div th:each="book : ${books}" class="col-lg-4 col-md-6 mb-4 book-item" th:data-category="${book.category}">
+                <div class="card book-card h-100">
+                    <div class="card-header bg-light">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h6 class="card-title mb-0 text-primary" th:text="${book.title}"></h6>
+                            <span class="book-price" th:text="${book.price} + '€'"></span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            <strong class="text-muted">
+                                <i class="bi bi-person me-1"></i>
+                                <span th:text="${book.author}"></span>
+                            </strong>
+                        </p>
+                        <p class="card-text">
+                            <span class="badge bg-secondary me-2 category-tag" th:text="${book.category}"></span>
+                            <small class="text-muted">
+                                <i class="bi bi-translate me-1"></i>
+                                <span th:text="${book.language}"></span>
+                            </small>
+                        </p>
+                        <p class="card-text" th:if="${book.description != null and !book.description.isEmpty()}">
+                            <small class="text-muted" th:text="${#strings.abbreviate(book.description, 100)}"></small>
+                        </p>
+                        <p class="card-text" th:if="${book.publisher != null and !book.publisher.isEmpty()}">
+                            <small class="text-muted">
+                                <i class="bi bi-building me-1"></i>
+                                <span th:text="${book.publisher}"></span>
+                            </small>
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted" th:if="${book.publicationDate != null and !book.publicationDate.isEmpty()}">
+                                <i class="bi bi-calendar me-1"></i>
+                                <span th:text="${book.publicationDate}"></span>
+                            </small>
+                            <div th:if="${canBorrow}">
+                                <form th:action="@{/borrows/borrow/{id}(id=${book.id})}" method="post" class="d-inline">
+                                    <button type="submit" class="btn borrow-btn"
+                                            onclick="return confirm('Voulez-vous emprunter ce livre pour 14 jours ?')">
+                                        <i class="bi bi-bookmark-plus me-1"></i>Emprunter
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aucun livre disponible -->
+    <div th:if="${books == null or #lists.size(books) == 0}" class="text-center py-5">
+        <i class="bi bi-book display-1 text-muted"></i>
+        <h4 class="text-muted mt-3">Aucun livre disponible</h4>
+        <p class="text-muted">
+            Il n'y a actuellement aucun livre dans le catalogue.
+        </p>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Générer les filtres de catégorie dynamiquement
+    document.addEventListener('DOMContentLoaded', function() {
+        const categories = new Set();
+        const bookItems = document.querySelectorAll('.book-item');
+
+        bookItems.forEach(item => {
+            const category = item.dataset.category;
+            if (category && category.trim()) {
+                categories.add(category.trim());
+            }
+        });
+
+        const filterContainer = document.querySelector('.filter-card .card-body .d-flex');
+        categories.forEach(category => {
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-outline-secondary category-badge';
+            badge.textContent = category;
+            badge.onclick = () => filterBooks(category);
+            badge.style.cursor = 'pointer';
+            filterContainer.appendChild(badge);
+        });
+    });
+
+    // Fonction de filtrage
+    function filterBooks(category) {
+        const bookItems = document.querySelectorAll('.book-item');
+        const badges = document.querySelectorAll('.category-badge');
+
+        // Réinitialiser les styles des badges
+        badges.forEach(badge => {
+            badge.className = 'badge bg-outline-secondary category-badge';
+        });
+
+        // Activer le badge sélectionné
+        event.target.className = 'badge bg-primary category-badge';
+
+        bookItems.forEach(item => {
+            if (category === 'all' || item.dataset.category === category) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>
 </body>
 </html>

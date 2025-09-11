@@ -46,13 +46,10 @@ public class LoginController {
 
         String generatedVisa = (String) session.getAttribute("generatedVisa");
 
-        /*
         if (!visa.equals(generatedVisa)) {
             redirectAttributes.addFlashAttribute("error", "Visa incorrect. Nouveau code généré.");
             return "redirect:/login";
         }
-
-         */
 
         try {
             User user = userService.authentificate(username, password, role);

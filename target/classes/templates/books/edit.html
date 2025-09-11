@@ -11,7 +11,7 @@
             background-color: #f8f9fa;
         }
         .page-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 100%);
             color: white;
             padding: 2rem 0;
             margin-bottom: 2rem;
@@ -30,11 +30,11 @@
             transition: all 0.3s ease;
         }
         .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: #ff9a56;
+            box-shadow: 0 0 0 0.2rem rgba(255, 154, 86, 0.25);
         }
-        .btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .btn-update {
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6b6b 100%);
             border: none;
             border-radius: 10px;
             padding: 0.75rem 2rem;
@@ -42,18 +42,19 @@
             font-weight: 600;
             transition: transform 0.2s ease;
         }
-        .btn-submit:hover {
+        .btn-update:hover {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
         .form-floating label {
             color: #6c757d;
         }
-        .book-preview {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+        .book-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
@@ -70,7 +71,7 @@
                     <i class="bi bi-pencil-square me-2"></i>
                     Modifier le livre
                 </h1>
-                <p class="mb-0 opacity-75">Mettre à jour les informations</p>
+                <p class="mb-0 opacity-75">Mettre à jour les informations du livre</p>
             </div>
             <div class="col-auto">
                 <a href="/books/manage" class="btn btn-light">
@@ -83,60 +84,58 @@
 </div>
 
 <div class="container">
-    <!-- Messages -->
+    <!-- Messages de succès -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Messages d'erreur -->
     <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         <span th:text="${error}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <!-- Aperçu du livre actuel -->
-    <div class="row justify-content-center mb-4">
+    <!-- Information du livre actuel -->
+    <div class="row justify-content-center" th:if="${book}">
         <div class="col-lg-8">
-            <div class="book-preview">
-                <h5 class="text-primary mb-3">
-                    <i class="bi bi-eye me-2"></i>Livre à modifier
-                </h5>
-                <div class="row">
-                    <div class="col-md-8">
-                        <h6 th:text="${book.title}"></h6>
-                        <p class="text-muted mb-1">
-                            <strong>Auteur:</strong> <span th:text="${book.author}"></span>
-                        </p>
-                        <p class="text-muted mb-1">
-                            <strong>Catégorie:</strong>
-                            <span class="badge bg-secondary" th:text="${book.category}"></span>
-                        </p>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <small class="text-muted">ID: <span th:text="${book.id}"></span></small>
-                    </div>
-                </div>
+            <div class="book-info">
+                <h6 class="mb-2">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Livre en cours de modification
+                </h6>
+                <p class="mb-0">
+                    <strong>ID:</strong> <span th:text="${book.id}">1</span> |
+                    <strong>Titre actuel:</strong> <span th:text="${book.title}">Titre</span>
+                </p>
             </div>
         </div>
     </div>
 
-    <!-- Formulaire -->
+    <!-- Formulaire de modification -->
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card form-card">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0">
-                        <i class="bi bi-journal-text me-2"></i>
-                        Nouvelles informations
+                        <i class="bi bi-journal-bookmark me-2"></i>
+                        Modifier les informations
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <form th:action="@{/books/edit}" method="post" th:object="${book}">
-                        <!-- ID caché -->
-                        <input type="hidden" th:field="*{id}">
+                    <form th:action="@{/books/edit}" method="post" th:object="${book}" novalidate>
+                        <!-- Champ caché pour l'ID -->
+                        <input type="hidden" th:field="*{id}" />
 
                         <div class="row">
                             <!-- Titre -->
                             <div class="col-md-6 mb-3">
                                 <div class="form-floating">
                                     <input type="text" class="form-control" id="title"
-                                           th:field="*{title}" placeholder="Titre du livre" required>
+                                           th:field="*{title}" placeholder="Titre du livre" required
+                                           maxlength="255">
                                     <label for="title">
                                         <i class="bi bi-journal-text me-2"></i>Titre *
                                     </label>
@@ -147,7 +146,8 @@
                             <div class="col-md-6 mb-3">
                                 <div class="form-floating">
                                     <input type="text" class="form-control" id="author"
-                                           th:field="*{author}" placeholder="Nom de l'auteur" required>
+                                           th:field="*{author}" placeholder="Nom de l'auteur" required
+                                           maxlength="255">
                                     <label for="author">
                                         <i class="bi bi-person me-2"></i>Auteur *
                                     </label>
@@ -181,7 +181,8 @@
                             <div class="col-md-6 mb-3">
                                 <div class="form-floating">
                                     <input type="text" class="form-control" id="publisher"
-                                           th:field="*{publisher}" placeholder="Maison d'édition">
+                                           th:field="*{publisher}" placeholder="Maison d'édition"
+                                           maxlength="255">
                                     <label for="publisher">
                                         <i class="bi bi-building me-2"></i>Éditeur
                                     </label>
@@ -231,9 +232,10 @@
                             <!-- Description -->
                             <div class="col-md-12 mb-4">
                                 <div class="form-floating">
-                                        <textarea class="form-control" id="description"
-                                                  th:field="*{description}" style="height: 120px"
-                                                  placeholder="Description du livre..."></textarea>
+                                    <textarea class="form-control" id="description"
+                                              th:field="*{description}" style="height: 120px"
+                                              placeholder="Description du livre..."
+                                              maxlength="1000"></textarea>
                                     <label for="description">
                                         <i class="bi bi-card-text me-2"></i>Description
                                     </label>
@@ -244,13 +246,17 @@
                         <!-- Boutons -->
                         <div class="row">
                             <div class="col-12 text-center">
-                                <button type="submit" class="btn btn-submit me-3">
+                                <button type="submit" class="btn btn-update me-3">
                                     <i class="bi bi-check-circle me-2"></i>
-                                    Enregistrer les modifications
+                                    Mettre à jour le livre
                                 </button>
-                                <a href="/books/manage" class="btn btn-outline-secondary">
+                                <a href="/books/manage" class="btn btn-outline-secondary me-2">
                                     <i class="bi bi-x-circle me-2"></i>
                                     Annuler
+                                </a>
+                                <a th:href="@{'/books/edit/' + ${book.id}}" class="btn btn-outline-info">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>
+                                    Réinitialiser
                                 </a>
                             </div>
                         </div>
@@ -269,5 +275,23 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Validation côté client
+    (function() {
+        'use strict';
+        window.addEventListener('load', function() {
+            var forms = document.getElementsByClassName('needs-validation');
+            var validation = Array.prototype.filter.call(forms, function(form) {
+                form.addEventListener('submit', function(event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
 </body>
 </html>

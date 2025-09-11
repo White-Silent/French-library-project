@@ -1,7 +1,6 @@
 package com.libraryproject.model;
 
 //Database book
-
 public class Book {
     //Attributes
     private int id;
@@ -13,6 +12,20 @@ public class Book {
     private double price;
     private String publicationDate;
     private String description;
+
+    // CONSTRUCTEUR PAR DÉFAUT - OBLIGATOIRE pour Spring Boot
+    public Book() {
+        // Constructeur vide nécessaire pour Spring Boot et Thymeleaf
+        // Initialisation avec des valeurs par défaut si nécessaire
+        this.title = "";
+        this.category = "";
+        this.author = "";
+        this.publisher = "";
+        this.language = "";
+        this.price = 0.0;
+        this.publicationDate = "";
+        this.description = "";
+    }
 
     //Constructor of the Book - for the creation of the Object
     public Book(String title, String category, String author, String publisher, String language, double price, String publicationDate, String description) {

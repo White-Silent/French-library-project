@@ -36,6 +36,24 @@
             padding: 1.5rem;
             margin-bottom: 2rem;
         }
+        .book-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        .book-row:hover {
+            background-color: #f8f9fa;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
@@ -77,11 +95,179 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <!-- Le contenu principal de la page ira ici -->
+    <!-- Statistiques -->
+    <div class="row mb-4" th:if="${books}">
+        <div class="col-md-4">
+            <div class="card text-center border-primary">
+                <div class="card-body">
+                    <i class="bi bi-books display-4 text-primary"></i>
+                    <h3 class="mt-2" th:text="${#lists.size(books)}">0</h3>
+                    <p class="text-muted mb-0">Livres au total</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <i class="bi bi-check-circle display-4 text-success"></i>
+                    <h3 class="mt-2">Disponibles</h3>
+                    <p class="text-muted mb-0">Prêts à emprunter</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center border-warning">
+                <div class="card-body">
+                    <i class="bi bi-clock display-4 text-warning"></i>
+                    <h3 class="mt-2">Empruntés</h3>
+                    <p class="text-muted mb-0">En cours</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Liste des livres -->
+    <div class="card book-card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-list-ul me-2"></i>
+                Liste des livres
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <!-- Table des livres -->
+            <div th:if="${books != null and not #lists.isEmpty(books)}" class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="book-table">
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Titre</th>
+                        <th scope="col">Auteur</th>
+                        <th scope="col">Catégorie</th>
+                        <th scope="col">Langue</th>
+                        <th scope="col">Prix</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="book : ${books}" class="book-row">
+                        <td>
+                            <span class="badge bg-secondary" th:text="${book.id}">1</span>
+                        </td>
+                        <td>
+                            <strong th:text="${book.title}">Titre du livre</strong>
+                            <br>
+                            <small class="text-muted" th:text="${book.publisher}">Éditeur</small>
+                        </td>
+                        <td th:text="${book.author}">Auteur</td>
+                        <td>
+                            <span class="badge bg-info" th:text="${book.category}">Catégorie</span>
+                        </td>
+                        <td th:text="${book.language}">Français</td>
+                        <td>
+                            <span th:if="${book.price > 0}" th:text="${book.price + ' €'}">0 €</span>
+                            <span th:if="${book.price == 0}" class="text-muted">Gratuit</span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <!-- Bouton d'édition - CORRECTION PRINCIPALE -->
+                                <a th:href="@{'/books/edit/' + ${book.id}}"
+                                   class="btn btn-warning btn-sm action-btn"
+                                   title="Modifier ce livre">
+                                    <i class="bi bi-pencil-square"></i>
+                                    Modifier
+                                </a>
+
+                                <!-- Bouton de suppression -->
+                                <button type="button"
+                                        class="btn btn-danger btn-sm action-btn"
+                                        th:onclick="'confirmDelete(' + ${book.id} + ', \'' + ${book.title} + '\')'"
+                                        title="Supprimer ce livre">
+                                    <i class="bi bi-trash"></i>
+                                    Supprimer
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- État vide -->
+            <div th:if="${books == null or #lists.isEmpty(books)}" class="empty-state">
+                <i class="bi bi-journal-x"></i>
+                <h4>Aucun livre disponible</h4>
+                <p>Commencez par ajouter votre premier livre à la bibliothèque.</p>
+                <a href="/books/add" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Ajouter un livre
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle text-danger me-2"></i>
+                    Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le livre :</p>
+                <p><strong id="bookTitle"></strong> ?</p>
+                <p class="text-danger small">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Cette action est irréversible.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Annuler
+                </button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-2"></i>
+                        Supprimer définitivement
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Scripts Bootstrap -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function confirmDelete(bookId, bookTitle) {
+        // Mettre à jour le contenu du modal
+        document.getElementById('bookTitle').textContent = bookTitle;
+        document.getElementById('deleteForm').action = '/books/delete/' + bookId;
+
+        // Afficher le modal
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        deleteModal.show();
+    }
+
+    // Animation au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('.book-row');
+        rows.forEach((row, index) => {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    });
+</script>
 </body>
 </html>

@@ -6,20 +6,25 @@ import com.libraryproject.enums.Role;
 import com.libraryproject.model.Book;
 import com.libraryproject.model.Borrow;
 import com.libraryproject.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 
+@Service
 public class BorrowService {
     //Attribute
+    @Autowired
     private BorrowDAO borrowDAO;
 
+    /*
     //Cosntructor
     public BorrowService(BorrowDAO borrowDAO) {
         this.borrowDAO = borrowDAO;
     }
-
+     */
     //Method
     //Borrow a book
     public void borrowBook(User user, Book book) throws SQLException {

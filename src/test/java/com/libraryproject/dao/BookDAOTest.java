@@ -22,7 +22,7 @@ public class BookDAOTest {
     @BeforeAll
     static void setUpDatabase() throws SQLException {
         //Chaîne de connexion JDBC
-        String url = "jdbc:mysql://192.168.101.214:3306/bibliotheque_test";
+        String url = "jdbc:mysql://192.168.101.155:3306/bibliotheque_test";
         //User & Password -> Droit pour accéder à la base "bibliotheque_test"
         String user = "javauser";
         String password = "Daumesnil504!";

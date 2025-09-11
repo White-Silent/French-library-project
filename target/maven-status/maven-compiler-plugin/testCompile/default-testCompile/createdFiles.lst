@@ -1,7 +1,0 @@
-com/libraryproject/dao/UserDAOTest.class
-com/libraryproject/library_web/LibraryWebApplicationTests.class
-com/libraryproject/service/BorrowServiceTest.class
-com/libraryproject/dao/BookDAOTest.class
-com/libraryproject/dao/BorrowDAOTest.class
-com/libraryproject/service/BookServiceTest.class
-com/libraryproject/service/UserServiceTest.class

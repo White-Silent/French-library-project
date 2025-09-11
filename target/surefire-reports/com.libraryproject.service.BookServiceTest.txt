@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.libraryproject.service.BookServiceTest
--------------------------------------------------------------------------------
-Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.296 s -- in com.libraryproject.service.BookServiceTest

@@ -3,23 +3,23 @@ package com.libraryproject.service;
 import com.libraryproject.dao.UserDAO;
 import com.libraryproject.enums.Role;
 import com.libraryproject.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
+@Service  // ANNOTATION CRUCIALE !
 public class UserService {
-    //Attribute
+
+    @Autowired  // Spring injecte automatiquement UserDAO
     private UserDAO userDAO;
 
-    //Constructor
-    public UserService(UserDAO userDAO) {
-        this.userDAO = userDAO;
-    }
+    // Supprimez le constructeur manuel, Spring s'en occupe
 
     //Method
     //Generate a Visa
     public String generateVisa() {
-        return userDAO.generateVisa();
+        return UserDAO.generateVisa();  // Méthode statique
     }
 
     public void addUser(User user) throws SQLException {
@@ -31,20 +31,6 @@ public class UserService {
         }
         userDAO.addUser(user);
     }
-
-    //Creation of the User
-    private User buildUserFromResultSet(ResultSet rs) throws SQLException {
-        Role role = Role.fromDbValue(rs.getString("role"));
-        User user = new User(
-                rs.getString("username"),
-                rs.getString("password"),
-                role,
-                rs.getString("visa")
-        );
-        user.setId(rs.getInt("id"));
-        return user;
-    }
-
 
     public User getUserById(int id) throws SQLException {
         return userDAO.getUserById(id);

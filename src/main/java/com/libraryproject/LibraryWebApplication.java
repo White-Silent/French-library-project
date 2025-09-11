@@ -1,4 +1,4 @@
-package com.libraryproject.library_web;
+package com.libraryproject;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,5 +9,4 @@ public class LibraryWebApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(LibraryWebApplication.class, args);
 	}
-
 }

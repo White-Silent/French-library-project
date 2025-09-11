@@ -18,6 +18,12 @@ public class AutoController {
     @Autowired
     private UserService userService;
 
+    // Route racine - redirection vers login
+    @GetMapping("/")
+    public String home() {
+        return "redirect:/login";
+    }
+
     // Afficher la page de login
     @GetMapping("/login")
     public String showLoginForm(Model model, HttpSession session) {
@@ -57,7 +63,7 @@ public class AutoController {
             }
 
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Erreur lors de la connexion.");
+            redirectAttributes.addFlashAttribute("error", "Erreur lors de la connexion: " + e.getMessage());
             return "redirect:/login";
         }
     }

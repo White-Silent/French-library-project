@@ -8,26 +8,21 @@ import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
 
-@Service  // ANNOTATION CRUCIALE !
+@Service
 public class UserService {
 
-    @Autowired  // Spring injecte automatiquement UserDAO
+    @Autowired
     private UserDAO userDAO;
 
-    // Supprimez le constructeur manuel, Spring s'en occupe
-
     //Method
-    //Generate a Visa
+    //Generate a Visa (pour la sécurité CSRF uniquement)
     public String generateVisa() {
-        return UserDAO.generateVisa();  // Méthode statique
+        return UserDAO.generateVisa();
     }
 
     public void addUser(User user) throws SQLException {
         if (user.getUsername() == null || user.getUsername().isEmpty()){
             throw new RuntimeException("Username is required !");
-        }
-        if (user.getVisa() == null || user.getVisa().isEmpty()){
-            user.setVisa(generateVisa());
         }
         userDAO.addUser(user);
     }
@@ -41,10 +36,7 @@ public class UserService {
     }
 
     public User authentificate(String username, String password, Role role) throws SQLException {
-        User user = userDAO.getUserByUsername(username);
-        if (user != null && user.getPassword().equals(password) && user.getRole() == role){
-            return user;
-        }
-        return null;
+        // Utilisation directe de la méthode DAO qui fait la vérification complète
+        return userDAO.authentificate(username, password, role);
     }
 }

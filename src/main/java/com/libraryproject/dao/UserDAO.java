@@ -15,9 +15,6 @@ public class UserDAO {
     @Autowired
     private DataSource dataSource;
 
-    // SUPPRIMEZ COMPLÈTEMENT L'ANCIEN CONSTRUCTEUR
-    // public UserDAO(Connection connection) { ... }
-
     // Constructeur par défaut (Spring l'utilise)
     public UserDAO() {
         // Spring injecte automatiquement la DataSource
@@ -28,7 +25,7 @@ public class UserDAO {
         return dataSource.getConnection();
     }
 
-    //Générer un visa de manière aléatoire
+    //Générer un visa de manière aléatoire (pour la sécurité CSRF)
     public static String generateVisa() {
         Random rand = new Random();
         char letter1 = (char) ('A' + rand.nextInt(26));
@@ -39,17 +36,13 @@ public class UserDAO {
 
     //Add a new User
     public void addUser(User user) throws SQLException {
-        if (user.getVisa() == null || user.getVisa().isEmpty()){
-            user.setVisa(generateVisa());
-        }
-        String sqlRequest = "INSERT INTO users (username, password, role, visa) VALUES (?, ?, ?, ?)";
+        String sqlRequest = "INSERT INTO users (username, password, role) VALUES (?, ?, ?)";
 
         try (Connection connection = getConnection();
              PreparedStatement ps = connection.prepareStatement(sqlRequest, Statement.RETURN_GENERATED_KEYS)){
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPassword());
             ps.setString(3, user.getRole().getDbValue());
-            ps.setString(4, user.getVisa());
             ps.executeUpdate();
 
             //Retrieve the id
@@ -66,8 +59,7 @@ public class UserDAO {
         User user = new User(
                 rs.getString("username"),
                 rs.getString("password"),
-                role,
-                rs.getString("visa")
+                role
         );
         user.setId(rs.getInt("id"));
         return user;
@@ -105,27 +97,19 @@ public class UserDAO {
         return null;
     }
 
-    //Verify the authentification
-    public User authentificate(String username, String password, Role role, String visa) throws SQLException {
-        String sqlRequest = "SELECT * FROM users WHERE username = ? AND password = ? AND role = ? AND visa = ?";
+    //Verify the authentification (plus de visa en base)
+    public User authentificate(String username, String password, Role role) throws SQLException {
+        String sqlRequest = "SELECT * FROM users WHERE username = ? AND password = ? AND role = ?";
 
         try (Connection connection = getConnection();
              PreparedStatement ps = connection.prepareStatement(sqlRequest)){
             ps.setString(1, username);
             ps.setString(2, password);
-            ps.setString(3, role.name());
-            ps.setString(4, visa);
+            ps.setString(3, role.getDbValue()); // Utiliser getDbValue() pour la cohérence
 
             try (ResultSet rs = ps.executeQuery()){
                 if (rs.next()){
-                    User user = new User(
-                            rs.getString("username"),
-                            rs.getString("password"),
-                            Role.fromDbValue(rs.getString("role")),
-                            rs.getString("visa")
-                    );
-                    user.setId(rs.getInt("id"));
-                    return user;
+                    return buildUserFromResultSet(rs);
                 } else {
                     return null;
                 }

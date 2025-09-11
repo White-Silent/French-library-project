@@ -8,14 +8,12 @@ public class User {
     private String username;
     private String password;
     private Role role;
-    private String visa;
 
     //Constructor User
-    public User( String username, String password, Role role, String visa) {
+    public User( String username, String password, Role role) {
         this.username = username;
         this.password = password;
         this.role = role;
-        this.visa = visa;
     }
 
     //Getter and Setter
@@ -52,17 +50,9 @@ public class User {
         this.role = role;
     }
 
-    public String getVisa() {
-        return visa;
-    }
-
-    public void setVisa(String visa) {
-        this.visa = visa;
-    }
-
     //Method
     @Override
     public String toString(){
-        return "User [ id = " + this.id + " password = " + this.password + " role = " + this.role + " visa = " + this.visa + " ]";
+        return "User [ id = " + this.id + " password = " + this.password + " role = " + this.role + " ]";
     }
 }

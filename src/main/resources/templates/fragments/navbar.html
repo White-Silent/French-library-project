@@ -18,6 +18,7 @@
 
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
+                <!-- Accueil -->
                 <li class="nav-item">
                     <a class="nav-link" href="/dashboard">
                         <i class="bi bi-house-fill me-1"></i>Accueil
@@ -25,37 +26,34 @@
                 </li>
 
                 <!-- Menu pour ADMIN -->
-                <div th:if="${user.role.name() == 'ADMIN'}">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="booksDropdown" role="button"
-                           data-bs-toggle="dropdown">
-                            <i class="bi bi-journal-bookmark me-1"></i>Gestion des livres
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/books/manage">
-                                <i class="bi bi-list me-2"></i>Tous les livres</a></li>
-                            <li><a class="dropdown-item" href="/books/add">
-                                <i class="bi bi-plus-circle me-2"></i>Ajouter un livre</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/books/search">
-                                <i class="bi bi-search me-2"></i>Rechercher</a></li>
-                        </ul>
-                    </li>
-                </div>
+                <li class="nav-item dropdown" th:if="${user.role.name() == 'ADMIN'}">
+                    <a class="nav-link dropdown-toggle" href="#" id="booksDropdown" role="button"
+                       data-bs-toggle="dropdown">
+                        <i class="bi bi-journal-bookmark me-1"></i>Gestion des livres
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/books/manage">
+                            <i class="bi bi-list me-2"></i>Tous les livres</a></li>
+                        <li><a class="dropdown-item" href="/books/add">
+                            <i class="bi bi-plus-circle me-2"></i>Ajouter un livre</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/books/search">
+                            <i class="bi bi-search me-2"></i>Rechercher</a></li>
+                    </ul>
+                </li>
 
                 <!-- Menu pour READER -->
-                <div th:if="${user.role.name() == 'READER'}">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/borrows/catalog">
-                            <i class="bi bi-book me-1"></i>Catalogue
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/borrows/my">
-                            <i class="bi bi-bookmark-heart me-1"></i>Mes emprunts
-                        </a>
-                    </li>
-                </div>
+                <li class="nav-item" th:if="${user.role.name() == 'READER'}">
+                    <a class="nav-link" href="/borrows/catalog">
+                        <i class="bi bi-book me-1"></i>Catalogue
+                    </a>
+                </li>
+
+                <li class="nav-item" th:if="${user.role.name() == 'READER'}">
+                    <a class="nav-link" href="/borrows/my">
+                        <i class="bi bi-bookmark-heart me-1"></i>Mes emprunts
+                    </a>
+                </li>
 
                 <!-- Recherche pour tous -->
                 <li class="nav-item">

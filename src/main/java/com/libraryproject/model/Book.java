@@ -1,5 +1,12 @@
 package com.libraryproject.model;
 
+import com.libraryproject.enums.BorrowStatus;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
+
+import java.util.ArrayList;
+import java.util.List;
+
 //Database book
 public class Book {
     //Attributes

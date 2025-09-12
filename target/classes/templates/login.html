@@ -1,9 +1,13 @@
+<!-- Structure de base du html -->
 <!DOCTYPE html>
+<!-- activer thymeleaf , il faut utiliser xmlns.th -->
+
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - Bibliothèque</title>
+    <!-- en tête et style -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -99,6 +103,7 @@
                             <label for="username" class="form-label">
                                 <i class="bi bi-person-fill me-2"></i>Nom d'utilisateur
                             </label>
+                            <!-- nom du paramètre que Spring va récupérer , ici username -->
                             <input type="text" class="form-control" id="username" name="username" required>
                         </div>
 
@@ -117,6 +122,7 @@
                             </label>
                             <select class="form-select" id="role" name="role" required>
                                 <option value="">Sélectionner un rôle</option>
+                                <!-- List déroutante des rôles -->
                                 <option th:each="role : ${roles}" th:value="${role}" th:text="${role.getDbValue()}"></option>
                             </select>
                         </div>

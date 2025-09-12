@@ -1,6 +1,8 @@
 package com.libraryproject.service;
 
+import com.libraryproject.dao.BookDAO;
 import com.libraryproject.dao.BorrowDAO;
+import com.libraryproject.dao.UserDAO;
 import com.libraryproject.enums.BorrowStatus;
 import com.libraryproject.enums.Role;
 import com.libraryproject.model.Book;
@@ -18,6 +20,12 @@ public class BorrowService {
     //Attribute
     @Autowired
     private BorrowDAO borrowDAO;
+
+    @Autowired
+    private UserDAO userDAO;
+
+    @Autowired
+    private BookDAO bookDAO;
 
     /*
     //Cosntructor
@@ -50,5 +58,39 @@ public class BorrowService {
     //Get BorrowByUser ID
     public List<Borrow> getBorrowByUser(int userId) throws SQLException {
         return borrowDAO.getBorrowsByUser(userId);
+    }
+
+    // === GESTION DES EMPRUNTS ===
+
+    public List<Borrow> getActiveBorrowsByUser(int userId) throws SQLException {
+        return borrowDAO.getActiveBorrowsByUser(userId);
+    }
+
+    public List<Borrow> getAllBorrowsByUser(int userId) throws SQLException {
+        return borrowDAO.getBorrowsByUser(userId);
+    }
+
+    /**
+     * Emprunter un livre
+     */
+    public void borrowBook(int userId, int bookId) throws SQLException {
+        // Vérifier que le livre est disponible
+        if (!bookDAO.isBookAvailable(bookId)) {
+            throw new RuntimeException("Ce livre n'est pas disponible");
+        }
+
+        // Créer l'emprunt
+        User user = userDAO.getUserById(userId);
+        Book book = bookDAO.getBookById(bookId);
+
+        Borrow borrow = new Borrow(
+                user,
+                book,
+                LocalDate.now(),
+                LocalDate.now().plusWeeks(2), // 2 semaines d'emprunt
+                BorrowStatus.BORROWED
+        );
+
+        borrowDAO.borrowBook(borrow);
     }
 }

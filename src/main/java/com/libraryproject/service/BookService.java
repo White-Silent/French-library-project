@@ -157,4 +157,25 @@ public class BookService {
 
         return books;
     }
+
+    public List<Book> getAllBooks() throws SQLException {
+        return bookDAO.getAllBooks(); // votre méthode existante
+    }
+
+    public List<Book> getAvailableBooks() throws SQLException {
+        return bookDAO.getAvailableBooks();
+    }
+
+    public List<Book> getBorrowedBooks() throws SQLException {
+        return bookDAO.getBorrowedBooks();
+    }
+
+    public boolean isBookAvailable(int bookId) throws SQLException {
+        return bookDAO.isBookAvailable(bookId);
+    }
+
+    public int countAvailableBooks() throws SQLException {
+        return bookDAO.countAvailableBooks();
+    }
+
 }

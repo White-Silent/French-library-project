@@ -105,7 +105,7 @@ public class BorrowController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur lors du retour: " + e.getMessage());
         }
-        return "redirect:/borrows/my";
+        return "redirect:/borrows";
     }
 
     // Détails d'un emprunt
@@ -118,6 +118,6 @@ public class BorrowController {
 
         // Cette fonctionnalité nécessiterait une méthode getBorrowById dans BorrowService
         // Pour l'instant, redirection vers mes emprunts
-        return "redirect:/borrows/my";
+        return "redirect:/borrows";
     }
 }

@@ -162,4 +162,102 @@ public class BookDAO {
         }
         return books;
     }
+
+    //Récupérer tous les livre disponibles non empruntées actuellement
+    public List<Book> getAvailableBooks() throws SQLException {
+        List<Book> availableBooks = new ArrayList<>();
+        String sqlRequest = """
+                    SELECT DISTINCT b.* FROM books b
+                    WHERE b.id NOT IN (
+                    SELECT br.book_id FROM borrows br
+                    WHERE br.status IN ('BORROWED', 'LATE')
+                """;
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sqlRequest);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                availableBooks.add(mapResultSetToBook(rs));
+            }
+        }
+        return availableBooks;
+    }
+
+    //Vérifier si un livre spécifique est disponible
+    public boolean isBookAvailable(int bookId) throws SQLException {
+        String sql = """
+                   SELECT COUNT(*) FROM borrows
+                   WHERE book_id = ? AND status IN ('BORROWED', 'LATE')
+                """;
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)){
+            ps.setInt(1, bookId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) == 0; //Disponible si aucun emprunt
+                }
+            }
+        }
+        return false;
+    }
+
+    //Récupère tous les livres actuellement empruntées
+    public List<Book> getBorrowedBooks() throws SQLException {
+        List<Book> borrowedBooks = new ArrayList<>();
+        String sql = """
+                SELECT DISTINCT b.* FROM books b
+                INNER JOIN borrows br on b.id = br.book_id
+                WHERE br.status IN ('BORROWED', 'LATE')  
+                """;
+        try (Connection connection = getConnection();
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    borrowedBooks.add(mapResultSetToBook(rs));
+                }
+        }
+        return borrowedBooks;
+    }
+
+    //Count the number of books available
+    public int countAvailableBooks() throws SQLException {
+        String sql = """
+                SELECT COUNT(DISTINCT b.id) FROM books b
+                WHERE b.id NOT IN (
+                    SELECT br.book_id FROM borrows br
+                    WHERE br.status IN ('BORROWED', 'LATE'))
+                """;
+        try (Connection connection = getConnection();
+        PreparedStatement ps = connection.prepareStatement(sql);
+        ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    //Récupérer l'emprunt actuel d'un livre (s'il existe)
+    public Integer getCurrentBorrowId(int bookId) throws SQLException{
+        String sql = """
+                SELECT id FROM borrows 
+                WHERE book_id = ? and   status IN ('BORROWED', 'LATE')
+                order by borrow_date DESC
+                LIMIT 1
+                """;
+        // -> ouvre la connexion à la BDD
+        //Le try évite les fuites de mémoire
+        try (Connection connection = getConnection();
+             // -> Prépare la requête SQL ils sont fermé dans le try
+        PreparedStatement ps = connection.prepareStatement(sql)){
+            ps.setInt(1, bookId); // Remplace le ? par l'id en argument
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id");
+                }
+            }
+        }
+        return null;
+    }
+
+
 }

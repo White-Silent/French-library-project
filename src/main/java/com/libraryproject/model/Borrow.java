@@ -1,8 +1,12 @@
 package com.libraryproject.model;
 
 import com.libraryproject.enums.BorrowStatus;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToMany;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Borrow {
 
@@ -22,6 +26,18 @@ public class Borrow {
         this.borrowDate = borrowDate;
         this.dueDate = dueDate;
         this.status = status;
+    }
+
+
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)
+    private List<Borrow> borrows = new ArrayList<>();
+
+    //Lire dispo s'il n'a pas d'emprunt actif
+    public boolean isAvailable(){
+        return borrows.stream().noneMatch(borrow ->
+                borrow.getStatus() == BorrowStatus.BORROWED ||
+                        borrow.getStatus() == BorrowStatus.LATE
+        );
     }
 
     //Getter & Setter

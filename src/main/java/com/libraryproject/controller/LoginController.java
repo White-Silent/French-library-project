@@ -1,5 +1,9 @@
 package com.libraryproject.controller;
 
+import com.libraryproject.dao.BookDAO;
+import com.libraryproject.dao.BorrowDAO;
+import com.libraryproject.model.Book;
+import com.libraryproject.model.Borrow;
 import com.libraryproject.service.UserService;
 import com.libraryproject.dao.UserDAO;
 import com.libraryproject.model.User;
@@ -12,11 +16,26 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpSession;
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+
+//Indique que cette classe gère les requêtes HTTP
 @Controller
 public class LoginController {
 
+    //Onjection du service
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserDAO userDAO;
+
+    @Autowired
+    private BookDAO bookDAO;
+
+    @Autowired
+    private BorrowDAO borrowDAO;
 
     // Route racine - redirection vers login
     @GetMapping("/")
@@ -69,12 +88,61 @@ public class LoginController {
     }
 
     // Dashboard après connexion réussie
+    /*
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
         model.addAttribute("user", user);
+
+        return "dashboard";
+    }
+     */
+
+    // Ajoutez cette méthode dans votre LoginController existant
+
+    @GetMapping("/dashboard")
+    public String dashboard(Model model, HttpSession session) {
+        try {
+            // Récupérer l'utilisateur connecté
+            User user = (User) session.getAttribute("user");
+            if (user == null) return "redirect:/login";
+
+            model.addAttribute("user", user);
+
+            if (user.getRole().name().equals("ADMIN")) {
+                // === DASHBOARD ADMIN ===
+
+                // Tous les livres
+                List<Book> allBooks = bookDAO.getAllBooks();
+                model.addAttribute("allBooks", allBooks);
+
+                // Compter les livres disponibles
+                int availableBooksCount = bookDAO.countAvailableBooks();
+                model.addAttribute("availableBooksCount", availableBooksCount);
+
+                // Compter les livres empruntés
+                int borrowedBooksCount = allBooks.size() - availableBooksCount;
+                model.addAttribute("borrowedBooksCount", borrowedBooksCount);
+
+            } else if (user.getRole().name().equals("READER")) {
+                // === DASHBOARD READER ===
+
+                // Mes emprunts actifs
+                List<Borrow> myBorrows = borrowDAO.getAllActiveBorrows();
+                model.addAttribute("myBorrows", myBorrows);
+
+                // Compter les livres disponibles
+                int availableBooksCount = bookDAO.countAvailableBooks();
+                model.addAttribute("availableBooksCount", availableBooksCount);
+            }
+
+        } catch (SQLException e) {
+            model.addAttribute("error", "Erreur lors du chargement des données : " + e.getMessage());
+            e.printStackTrace();
+        }
+
         return "dashboard";
     }
 

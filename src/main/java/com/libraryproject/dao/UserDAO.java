@@ -9,6 +9,7 @@ import javax.sql.DataSource;
 import java.sql.*;
 import java.util.Random;
 
+//Indique à Spring que cela permet d'accéder aux données
 @Repository
 public class UserDAO {
 
@@ -21,6 +22,9 @@ public class UserDAO {
     }
 
     // Méthode pour obtenir une connexion
+    //Au lieu de créer manuellement la connexion, on gère tout le processus de manière optimisée
+    //avec dataSource.getConnection()
+    //Le pooling permet d'améliorer considérablement les performances de l'application
     private Connection getConnection() throws SQLException {
         return dataSource.getConnection();
     }
@@ -43,19 +47,19 @@ public class UserDAO {
             ps.setString(1, user.getUsername());
             ps.setString(2, user.getPassword());
             ps.setString(3, user.getRole().getDbValue());
-            ps.executeUpdate();
+            ps.executeUpdate(); // -> exécution de l'insert
 
             //Retrieve the id
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
-                    user.setId(rs.getInt(1));
+                    user.setId(rs.getInt(1)); //Met à jour l'objet user, avec son nouvel ID
                 }
             }
-        }
+        } // Connexion automatiquement fermée
     }
 
     private User buildUserFromResultSet(ResultSet rs) throws SQLException {
-        Role role = Role.fromDbValue(rs.getString("role"));
+        Role role = Role.fromDbValue(rs.getString("role")); //Conversion String role en enum
         User user = new User(
                 rs.getString("username"),
                 rs.getString("password"),
@@ -74,11 +78,11 @@ public class UserDAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return buildUserFromResultSet(rs);
+                    return buildUserFromResultSet(rs); // -> Construction de l'objet
                 }
             }
         }
-        return null;
+        return null; // -> aucun utilisateur trouvé
     }
 
     public User getUserByUsername(String username) throws SQLException {
@@ -100,16 +104,17 @@ public class UserDAO {
     //Verify the authentification (plus de visa en base)
     public User authentificate(String username, String password, Role role) throws SQLException {
         String sqlRequest = "SELECT * FROM users WHERE username = ? AND password = ? AND role = ?";
+        //Vérification des 3 critères en simulatnés
 
-        try (Connection connection = getConnection();
-             PreparedStatement ps = connection.prepareStatement(sqlRequest)){
-            ps.setString(1, username);
+        try (Connection connection = getConnection(); // Connexion au pool
+             PreparedStatement ps = connection.prepareStatement(sqlRequest)){ // Préparation
+            ps.setString(1, username); // Paramétrage
             ps.setString(2, password);
             ps.setString(3, role.getDbValue()); // Utiliser getDbValue() pour la cohérence
 
-            try (ResultSet rs = ps.executeQuery()){
+            try (ResultSet rs = ps.executeQuery()){ //Exécution + Récupération
                 if (rs.next()){
-                    return buildUserFromResultSet(rs);
+                    return buildUserFromResultSet(rs); //Construction de l'objet
                 } else {
                     return null;
                 }

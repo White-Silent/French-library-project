@@ -76,11 +76,43 @@
             color: #fd7e14;
             font-weight: bold;
         }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        .book-cover {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #1976d2;
+        }
     </style>
 </head>
 <body>
 <!-- Navigation -->
-<div th:replace="fragments/navbar :: navbar"></div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="bi bi-book me-2"></i>Bibliothèque
+        </a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/catalog">Catalogue</a>
+            <a class="nav-link active" href="/borrows">Mes emprunts</a>
+            <a class="nav-link" href="/profile">Profil</a>
+        </div>
+    </div>
+</nav>
 
 <!-- Page Header -->
 <div class="page-header">
@@ -95,10 +127,10 @@
             </div>
             <div class="col-auto">
                 <div class="d-flex gap-2">
-                    <a href="/borrows/catalog" class="btn btn-light">
+                    <a href="/catalog" class="btn btn-light">
                         <i class="bi bi-book me-2"></i>Catalogue
                     </a>
-                    <a href="/books/search" class="btn btn-outline-light">
+                    <a href="/search" class="btn btn-outline-light">
                         <i class="bi bi-search me-2"></i>Rechercher
                     </a>
                 </div>
@@ -127,7 +159,7 @@
             <div class="col-md-3">
                 <div class="p-2">
                     <i class="bi bi-bookmark-check display-4 text-primary"></i>
-                    <h4 class="mt-2" th:text="${borrows != null ? #lists.size(borrows) : 0}"></h4>
+                    <h4 class="mt-2" th:text="${borrows != null ? #lists.size(borrows) : 0}">0</h4>
                     <p class="text-muted mb-0">Total emprunts</p>
                 </div>
             </div>
@@ -161,36 +193,40 @@
             <div th:each="borrow : ${borrows}" class="col-lg-6 mb-4">
                 <div class="card borrow-card h-100"
                      th:classappend="${borrow.status.name() == 'BORROWED'} ? 'border-primary' :
-                                        (${borrow.status.name() == 'RETURNED'} ? 'border-success' : 'border-danger')">
+                                            (${borrow.status.name() == 'RETURNED'} ? 'border-success' : 'border-danger')">
 
                     <!-- En-tête avec statut -->
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="card-title mb-0 text-truncate" th:text="${borrow.book.title}"></h6>
+                        <h6 class="card-title mb-0 text-truncate" th:text="${borrow.book.title}">Titre du livre</h6>
                         <span th:class="'status-badge status-' + ${#strings.toLowerCase(borrow.status.name())}"
-                              th:text="${borrow.status.dbValue}"></span>
+                              th:text="${borrow.status.dbValue}">Emprunté</span>
                     </div>
 
                     <!-- Informations du livre -->
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-8">
+                            <div class="col-3">
+                                <div class="book-cover">
+                                    <i class="bi bi-book"></i>
+                                </div>
+                            </div>
+                            <div class="col-9">
                                 <p class="mb-2">
                                     <strong class="text-muted">
                                         <i class="bi bi-person me-1"></i>
-                                        <span th:text="${borrow.book.author}"></span>
+                                        <span th:text="${borrow.book.author}">Auteur</span>
                                     </strong>
                                 </p>
                                 <p class="mb-2">
-                                    <span class="badge bg-secondary me-2" th:text="${borrow.book.category}"></span>
+                                    <span class="badge bg-secondary me-2" th:text="${borrow.book.category}">Catégorie</span>
                                     <small class="text-muted">
                                         <i class="bi bi-translate me-1"></i>
-                                        <span th:text="${borrow.book.language}"></span>
+                                        <span th:text="${borrow.book.language}">Français</span>
                                     </small>
                                 </p>
-                            </div>
-                            <div class="col-4 text-end">
                                 <div class="book-price">
-                                    <span th:text="${borrow.book.price} + '€'"></span>
+                                    <small class="text-muted">Prix: </small>
+                                    <span th:text="${borrow.book.price} + '€'">15€</span>
                                 </div>
                             </div>
                         </div>
@@ -200,11 +236,130 @@
                             <div class="row date-info">
                                 <div class="col-6">
                                     <small class="text-muted d-block">Emprunté le:</small>
-                                    <strong th:text="${borrow.borrowDate}"></strong>
+                                    <strong th:text="${#temporals.format(borrow.borrowDate, 'dd/MM/yyyy')}">01/01/2025</strong>
                                 </div>
                                 <div class="col-6">
                                     <small class="text-muted d-block">À rendre le:</small>
-                                    <strong th:text="${borrow.dueDate}"
+                                    <strong th:text="${#temporals.format(borrow.dueDate, 'dd/MM/yyyy')}"
                                             th:classappend="${borrow.status.name() == 'BORROWED'} ?
-                                                    (${#temporals.createNow().isAfter(borrow.dueDate)} ? 'overdue' :
-                                                     ${#temporals.daysBetween(#temporals.createNow(), borrow.due
+                                                        (${#temporals.createNow().isAfter(borrow.dueDate)} ? 'overdue' :
+                                                         ${#temporals.daysBetween(#temporals.createNow(), borrow.dueDate) <= 3} ? 'due-soon' : '') : ''">15/01/2025</strong>
+                                </div>
+                            </div>
+
+                            <!-- Date de retour si retourné -->
+                            <div th:if="${borrow.returnDate != null}" class="row date-info mt-2">
+                                <div class="col-12">
+                                    <small class="text-muted d-block">Retourné le:</small>
+                                    <strong class="text-success" th:text="${#temporals.format(borrow.returnDate, 'dd/MM/yyyy')}">10/01/2025</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="mt-3 d-flex gap-2">
+                            <button th:if="${borrow.status.name() == 'BORROWED'}"
+                                    class="btn return-btn btn-sm flex-fill"
+                                    onclick="returnBook(this)"
+                                    th:attr="data-borrow-id=${borrow.id}">
+                                <i class="bi bi-arrow-return-left me-1"></i>
+                                Retourner
+                            </button>
+
+                            <button th:if="${borrow.status.name() == 'BORROWED'}"
+                                    class="btn btn-outline-primary btn-sm"
+                                    onclick="renewBook(this)"
+                                    th:attr="data-borrow-id=${borrow.id}">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Renouveler
+                            </button>
+
+                            <a th:href="@{'/books/' + ${borrow.book.id}}"
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="bi bi-eye me-1"></i>
+                                Détails
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- État vide -->
+    <div th:if="${borrows == null or #lists.isEmpty(borrows)}" class="empty-state">
+        <i class="bi bi-bookmark-x"></i>
+        <h3>Aucun emprunt trouvé</h3>
+        <p class="mb-4">Vous n'avez pas encore emprunté de livres.</p>
+        <a href="/borrows/catalog" class="btn btn-primary">
+            <i class="bi bi-book me-2"></i>
+            Parcourir le catalogue
+        </a>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        updateStatistics();
+    });
+
+    function updateStatistics() {
+        const borrowCards = document.querySelectorAll('.borrow-card');
+        let activeCount = 0;
+        let returnedCount = 0;
+        let lateCount = 0;
+
+        borrowCards.forEach(card => {
+            const statusBadge = card.querySelector('.status-badge');
+            const statusText = statusBadge.textContent.toLowerCase();
+
+            if (statusText.includes('emprunté') || statusText.includes('borrowed')) {
+                activeCount++;
+                // Vérifier si en retard
+                const dueDateElement = card.querySelector('.overdue');
+                if (dueDateElement) {
+                    lateCount++;
+                }
+            } else if (statusText.includes('retourné') || statusText.includes('returned')) {
+                returnedCount++;
+            }
+        });
+
+        document.getElementById('activeCount').textContent = activeCount;
+        document.getElementById('returnedCount').textContent = returnedCount;
+        document.getElementById('lateCount').textContent = lateCount;
+    }
+
+    function returnBook(button) {
+        const borrowId = button.getAttribute('data-borrow-id');
+
+        if (confirm('Êtes-vous sûr de vouloir retourner ce livre ?')) {
+            // Simulation d'une requête AJAX
+            button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Traitement...';
+            button.disabled = true;
+
+            // Simuler un délai
+            setTimeout(() => {
+                // Dans un vrai projet, vous feriez une requête AJAX vers votre backend
+                window.location.href = `/borrows/return/${borrowId}`;
+            }, 1000);
+        }
+    }
+
+    function renewBook(button) {
+        const borrowId = button.getAttribute('data-borrow-id');
+
+        if (confirm('Voulez-vous renouveler cet emprunt pour 2 semaines supplémentaires ?')) {
+            button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Traitement...';
+            button.disabled = true;
+
+            setTimeout(() => {
+                window.location.href = `/borrows/renew/${borrowId}`;
+            }, 1000);
+        }
+    }
+</script>
+</body>
+</html>

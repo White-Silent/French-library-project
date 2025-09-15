@@ -175,61 +175,87 @@
     <!-- Liste des emprunts -->
     <div th:if="${borrows != null and #lists.size(borrows) > 0}">
         <div class="row">
-            <div th:each="borrow : ${borrows}" class="col-lg-6 mb-4">
+            <div th:each="borrow : ${borrows}" class="col-12">
                 <div class="card borrow-card h-100"
                      th:classappend="${borrow.status.name() == 'BORROWED'} ? 'border-primary' :
                                             (${borrow.status.name() == 'RETURNED'} ? 'border-success' : 'border-danger')">
 
                     <!-- En-tête avec statut -->
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h6 class="card-title mb-0 text-truncate" th:text="${borrow.book.title}">Titre du livre</h6>
-                        <span th:class="'status-badge status-' + ${#strings.toLowerCase(borrow.status.name())}"
-                              th:text="${borrow.status.dbValue}">Emprunté</span>
-                    </div>
-
-                    <!-- Informations du livre -->
-                    <div class="card-body">
+                    <!-- Liste des emprunts -->
+                    <div th:if="${borrows != null and #lists.size(borrows) > 0}">
                         <div class="row">
-                            <div class="col-3">
-                                <div class="book-cover">
-                                    <i class="bi bi-book"></i>
-                                </div>
-                            </div>
-                            <div class="col-9">
-                                <p class="mb-2">
-                                    <strong class="text-muted">
-                                        <i class="bi bi-person me-1"></i>
-                                        <span th:text="${borrow.book.author}">Auteur</span>
-                                    </strong>
-                                </p>
-                                <p class="mb-2">
-                                    <span class="badge bg-secondary me-2" th:text="${borrow.book.category}">Catégorie</span>
-                                    <small class="text-muted">
-                                        <i class="bi bi-translate me-1"></i>
-                                        <span th:text="${borrow.book.language}">Français</span>
-                                    </small>
-                                </p>
-                                <div class="book-price">
-                                    <small class="text-muted">Prix: </small>
-                                    <span th:text="${borrow.book.price} + '€'">15€</span>
+                            <div th:each="borrow : ${borrows}" class="col-12 col-md-6 col-lg-4 mb-4">
+                                <div class="card borrow-card h-100"
+                                     style="border: 2px solid black;"
+                                     th:classappend="${borrow.status.name() == 'BORROWED'} ? 'border-primary' :
+                                (${borrow.status.name() == 'RETURNED'} ? 'border-success' : 'border-danger')">
+
+                                    <div class="card-body">
+                                        <!-- Infos du livre -->
+                                        <h6 class="card-title" th:text="${borrow.book.title}">Titre du livre</h6>
+                                        <p class="card-text">
+                                            Auteur: <span th:text="${borrow.book.author}"></span><br>
+                                            Emprunté le: <span th:text="${borrow.borrowDate}"></span><br>
+                                            À rendre le: <span th:text="${borrow.dueDate}"></span>
+                                        </p>
+                                        <span class="badge bg-info" th:text="${borrow.status.dbValue}"></span>
+
+                                        <!-- Actions -->
+                                        <div class="mt-3 d-flex gap-2">
+                                            <!-- Bouton Retourner -->
+                                            <button th:if="${borrow.status.name() == 'BORROWED'}"
+                                                    class="btn return-btn btn-sm flex-fill"
+                                                    onclick="returnBook(this)"
+                                                    th:attr="data-borrow-id=${borrow.id}">
+                                                <i class="bi bi-arrow-return-left me-1"></i>
+                                                Retourner
+                                            </button>
+
+                                            <!-- Bouton Renouveler -->
+                                            <button th:if="${borrow.status.name() == 'BORROWED'}"
+                                                    class="btn btn-outline-primary btn-sm flex-fill"
+                                                    onclick="renewBook(this)"
+                                                    th:attr="data-borrow-id=${borrow.id}">
+                                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                                Renouveler
+                                            </button>
+
+                                            <!-- Bouton Détails -->
+                                            <!--
+                                            <button class="btn btn-outline-primary btn-sm flex-fill"
+                                                    data-bs-toggle="modal"
+                                                    th:data-bs-target="'#bookModal' + ${borrow.book.id}">
+                                                <i class="bi bi-eye me-1"></i>Détails
+                                            </button>
+                                            -->
+                                            <!-- pas besoin de modal - permet de générer l'URL direct du livre-->
+                                            <!--
+                                            <a th:href="@{'/books/' + ${borrow.book.id}}"
+                                               class="btn btn-outline-primary btn-sm flex-fill">
+                                                <i class="bi bi-eye me-1"></i>Détails
+                                            </a>
+                                            -->
+
+                                            <a th:href="@{'/books/' + ${borrow.book.id}}" class="btn btn-outline-primary btn-sm flex-fill">
+                                                <i class="bi bi-eye me-1"></i>Détails
+                                            </a>
+
+
+                                            <!--
+                                            <a th:href="@{'/books/' + ${borrow.book.id}}"
+                                               class="btn btn-outline-secondary btn-sm flex-fill">
+                                                <i class="bi bi-eye me-1"></i>
+                                                Détails
+                                            </a>
+                                            -->
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Dates importantes -->
-                        <div class="mt-3">
-                            <div class="row text-center"> <!-- <-- centre horizontalement le contenu -->
-                                <div class="col-6 mb-2">
-                                    <small class="text-muted d-block">Emprunté le</small>
-                                    <strong th:text="${#temporals.format(borrow.borrowDate, 'dd/MM/yyyy')}">01/01/2025</strong>
-                                </div>
-                                <div class="col-6 mb-2">
-                                    <small class="text-muted d-block">À rendre le</small>
-                                    <strong th:text="${#temporals.format(borrow.dueDate, 'dd/MM/yyyy')}">15/01/2025</strong>
-                                </div>
-                            </div>
-
-                            <!-- Statut / badge -->
+                    <!-- Statut / badge -->
                             <div class="row text-center mt-2">
                                 <div class="col-12">
                                     <div th:if="${borrow.returnDate == null and #temporals.createNow().isAfter(borrow.dueDate)}"
@@ -250,36 +276,14 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Actions -->
-                        <div class="mt-3 d-flex gap-2">
-                            <button th:if="${borrow.status.name() == 'BORROWED'}"
-                                    class="btn return-btn btn-sm flex-fill"
-                                    onclick="returnBook(this)"
-                                    th:attr="data-borrow-id=${borrow.id}">
-                                <i class="bi bi-arrow-return-left me-1"></i>
-                                Retourner
-                            </button>
-
-                            <button th:if="${borrow.status.name() == 'BORROWED'}"
-                                    class="btn btn-outline-primary btn-sm"
-                                    onclick="renewBook(this)"
-                                    th:attr="data-borrow-id=${borrow.id}">
-                                <i class="bi bi-arrow-clockwise me-1"></i>
-                                Renouveler
-                            </button>
-
-                            <a th:href="@{'/books/' + ${borrow.book.id}}"
-                               class="btn btn-outline-secondary btn-sm">
-                                <i class="bi bi-eye me-1"></i>
-                                Détails
-                            </a>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
+
+
 
     <!-- État vide -->
     <div th:if="${borrows == null or #lists.isEmpty(borrows)}" class="empty-state">
@@ -356,5 +360,6 @@
         }
     }
 </script>
+
 </body>
 </html>

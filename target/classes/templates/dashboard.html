@@ -273,7 +273,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="text-center" th:if="${#lists.size(myBorrows) > 3}">
+                            <div class="text-center" th:if="${#lists.size(myBorrows) > 10}">
                                 <a href="/borrows/my" class="btn btn-primary">
                                     Voir tous mes emprunts (<span th:text="${#lists.size(myBorrows)}"></span>)
                                 </a>

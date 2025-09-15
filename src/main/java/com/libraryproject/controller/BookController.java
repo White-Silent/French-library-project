@@ -31,6 +31,29 @@ public class BookController {
         return user;
     }
 
+    // Afficher la page de détails d’un livre
+    @GetMapping("/{id}")
+    public String showBookDetails(@PathVariable int id, HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            Book book = bookService.getBookById(id);
+            if (book == null) {
+                model.addAttribute("error", "Livre non trouvé avec l'ID : " + id);
+                return "books/search"; // ou une page d'erreur dédiée
+            }
+
+            model.addAttribute("book", book);
+            model.addAttribute("user", user);
+            return "books/search"; // Le template Thymeleaf pour afficher les détails du livre
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors de la récupération du livre : " + e.getMessage());
+            return "books/search";
+        }
+    }
     // Afficher tous les livres (ADMIN)
     @GetMapping("/manage")
     public String manageBooks(HttpSession session, Model model) {

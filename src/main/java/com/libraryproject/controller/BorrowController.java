@@ -1,5 +1,6 @@
 package com.libraryproject.controller;
 
+import com.libraryproject.dao.BorrowDAO;
 import com.libraryproject.model.Book;
 import com.libraryproject.model.Borrow;
 import com.libraryproject.model.User;
@@ -29,6 +30,8 @@ public class BorrowController {
 
     @Autowired
     private BookService bookService;
+    @Autowired
+    private BorrowDAO borrowDAO;
 
     // Vérifier si l'utilisateur est connecté
     private User checkUserAccess(HttpSession session) {
@@ -44,6 +47,12 @@ public class BorrowController {
         try {
             List<Borrow> borrowsUser = borrowService.getAllBorrowsByUser(user.getId());
             model.addAttribute("borrows", borrowsUser);
+
+            //Create a variable to use in Html
+            List<Borrow> userBorrow = borrowDAO.getAllActiveBorrows();
+
+            model.addAttribute("userBorrow", userBorrow);
+
             System.out.println("borrowUser size : " + borrowsUser.size());
             model.addAttribute("user", user);
             return "borrows/my-borrows";

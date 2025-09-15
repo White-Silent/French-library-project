@@ -1,6 +1,7 @@
 package com.libraryproject.controller;
 
 import com.libraryproject.model.Book;
+import com.libraryproject.model.Borrow;
 import com.libraryproject.model.User;
 import com.libraryproject.service.BookService;
 import com.libraryproject.service.BorrowService;
@@ -12,6 +13,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpSession;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/borrows")
@@ -35,7 +42,9 @@ public class BorrowController {
         if (user == null) return "redirect:/login";
 
         try {
-            model.addAttribute("borrows", borrowService.getBorrowByUser(user.getId()));
+            List<Borrow> borrowsUser = borrowService.getAllBorrowsByUser(user.getId());
+            model.addAttribute("borrows", borrowsUser);
+            System.out.println("borrowUser size : " + borrowsUser.size());
             model.addAttribute("user", user);
             return "borrows/my-borrows";
         } catch (Exception e) {
@@ -119,5 +128,30 @@ public class BorrowController {
         // Cette fonctionnalité nécessiterait une méthode getBorrowById dans BorrowService
         // Pour l'instant, redirection vers mes emprunts
         return "redirect:/borrows";
+    }
+
+    private Map<String, Object> calculateBorrowStatus(Borrow borrow) {
+        Map<String, Object> statusInfo = new HashMap<>();
+        LocalDate now = LocalDate.now();
+        LocalDate dueDate = borrow.getDueDate();
+
+        // Vérifier si en retard
+        boolean isOverdue = now.isAfter(dueDate) && borrow.getReturnDate() == null;
+
+        // Vérifier si à rendre bientôt (dans les 3 prochains jours)
+        boolean isDueSoon = false;
+        long daysUntilDue = 0;
+
+        if (!isOverdue && borrow.getReturnDate() == null) {
+            daysUntilDue = ChronoUnit.DAYS.between(now, dueDate);
+            isDueSoon = daysUntilDue <= 3 && daysUntilDue >= 0;
+        }
+
+        statusInfo.put("isOverdue", isOverdue);
+        statusInfo.put("isDueSoon", isDueSoon);
+        statusInfo.put("daysUntilDue", daysUntilDue);
+        statusInfo.put("isReturned", borrow.getReturnDate() != null);
+
+        return statusInfo;
     }
 }

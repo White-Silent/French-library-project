@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Design du style-->
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -80,8 +81,9 @@
 </head>
 <body>
 <!-- Navigation -->
-<div th:replace="fragments/navbar :: navbar"></div>
+<!-- Permet d'obtenir un fragment réutilisable sur toutes les pages du navigateur-->
 
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 <!-- Page Header -->
 <div class="page-header">
     <div class="container">

@@ -19,6 +19,7 @@ public class Book {
     private double price;
     private String publicationDate;
     private String description;
+    private boolean available;
 
     // CONSTRUCTEUR PAR DÉFAUT - OBLIGATOIRE pour Spring Boot
     public Book() {
@@ -32,6 +33,7 @@ public class Book {
         this.price = 0.0;
         this.publicationDate = "";
         this.description = "";
+        this.available = true;
     }
 
     //Constructor of the Book - for the creation of the Object
@@ -44,6 +46,7 @@ public class Book {
         this.price = price;
         this.publicationDate = publicationDate;
         this.description = description;
+        this.available = true;
     }
 
     //Add Getter and Setter - for all of these attributes
@@ -117,6 +120,14 @@ public class Book {
 
     public void setDescription(String description){
         this.description = description;
+    }
+
+    public boolean getAvailable(){
+        return available;
+    }
+
+    public void setAvailable(boolean available){
+        this.available = available;
     }
 
     //Method to String -> Easier to debug if there is some issue

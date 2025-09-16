@@ -109,6 +109,7 @@ public class BorrowController {
         }
     }
 
+
     // Retourner un livre
     @PostMapping("/return/{borrowId}")
     public String returnBook(@PathVariable int borrowId,
@@ -123,8 +124,33 @@ public class BorrowController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Erreur lors du retour: " + e.getMessage());
         }
-        return "redirect:/borrows";
+        return "redirect:/borrows/my";
     }
+
+    /*
+    @PostMapping("/return/{id}")
+    public String returnBook(@PathVariable int id, RedirectAttributes redirectAttributes) {
+        try {
+            borrowService.returnBook(id);
+            redirectAttributes.addFlashAttribute("success", "Livre retourné avec succès !");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Erreur lors du retour : " + e.getMessage());
+        }
+        return "redirect:/borrows/my";
+    }
+    */
+    /*
+    @PostMapping("/renew/{id}")
+    public String renewBook(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            borrowService.renewBook(id);
+            redirectAttributes.addFlashAttribute("success", "Emprunt renouvelé pour 2 semaines !");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Impossible de renouveler : " + e.getMessage());
+        }
+        return "redirect:/borrows/my";
+    }
+     */
 
     // Détails d'un emprunt
     @GetMapping("/details/{borrowId}")
@@ -162,5 +188,22 @@ public class BorrowController {
         statusInfo.put("isReturned", borrow.getReturnDate() != null);
 
         return statusInfo;
+    }
+
+    // Renouveler un emprunt
+    @PostMapping("/renew/{id}")
+    public String renewBook(@PathVariable int id,
+                            HttpSession session,
+                            RedirectAttributes redirectAttributes) {
+        User user = checkUserAccess(session);
+        if (user == null) return "redirect:/login";
+
+        try {
+            borrowService.renewBook(id);
+            redirectAttributes.addFlashAttribute("success", "Emprunt renouvelé pour 2 semaines !");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Impossible de renouveler : " + e.getMessage());
+        }
+        return "redirect:/borrows/my";
     }
 }

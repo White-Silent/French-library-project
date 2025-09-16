@@ -194,4 +194,44 @@ public class BorrowDAO {
 
         return 0;
     }
+
+    /**
+     * Récupère un emprunt par son ID
+     */
+    public Borrow getBorrowById(int borrowId) throws SQLException {
+        String sql = "SELECT * FROM borrows WHERE id = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setInt(1, borrowId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToBorrow(rs);
+                }
+            }
+        }
+
+        return null; // Emprunt non trouvé
+    }
+
+    /**
+     * Renouvelle un emprunt en prolongeant sa date d'échéance
+     */
+    public void renewBook(int borrowId, LocalDate newDueDate) throws SQLException {
+        String sql = "UPDATE borrows SET due_date = ? WHERE id = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(newDueDate));
+            ps.setInt(2, borrowId);
+
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 0) {
+                throw new SQLException("Aucun emprunt trouvé avec l'ID " + borrowId);
+            }
+        }
+    }
 }

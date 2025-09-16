@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <div th:replace="~{fragments/navbar :: navbar}"></div>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mes emprunts - Bibliothèque</title>
@@ -101,6 +100,8 @@
     </style>
 </head>
 <body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- Page Header -->
 <div class="page-header">
@@ -203,22 +204,27 @@
                                         <!-- Actions -->
                                         <div class="mt-3 d-flex gap-2">
                                             <!-- Bouton Retourner -->
-                                            <button th:if="${borrow.status.name() == 'BORROWED'}"
-                                                    class="btn return-btn btn-sm flex-fill"
-                                                    onclick="returnBook(this)"
-                                                    th:attr="data-borrow-id=${borrow.id}">
-                                                <i class="bi bi-arrow-return-left me-1"></i>
-                                                Retourner
-                                            </button>
+                                            <form th:action="@{/borrows/return/{id}(id=${borrow.id})}" method="post" class="d-inline">
+                                                <button th:if="${borrow.status.name() == 'BORROWED'}"
+                                                        type="submit"
+                                                        class="btn return-btn btn-sm flex-fill"
+                                                        onclick="return confirm('Voulez-vous retourner ce livre ?')">
+                                                    <i class="bi bi-arrow-return-left me-1"></i>
+                                                    Retourner
+                                                </button>
+                                            </form>
 
                                             <!-- Bouton Renouveler -->
-                                            <button th:if="${borrow.status.name() == 'BORROWED'}"
-                                                    class="btn btn-outline-primary btn-sm flex-fill"
-                                                    onclick="renewBook(this)"
-                                                    th:attr="data-borrow-id=${borrow.id}">
-                                                <i class="bi bi-arrow-clockwise me-1"></i>
-                                                Renouveler
-                                            </button>
+                                            <form th:action="@{/borrows/renew/{id}(id=${borrow.id})}" method="post" class="d-inline">
+                                                <button th:if="${borrow.status.name() == 'BORROWED'}"
+                                                        type="submit"
+                                                        class="btn btn-outline-primary btn-sm flex-fill"
+                                                        onclick="return confirm('Voulez-vous prolonger l’emprunt de 14 jours ?')">
+                                                    <i class="bi bi-arrow-clockwise me-1"></i>
+                                                    Renouveler
+                                                </button>
+                                            </form>
+
 
                                             <!-- Bouton Détails -->
                                             <!--
@@ -282,7 +288,6 @@
         </div>
 
     </div>
-
 
 
     <!-- État vide -->

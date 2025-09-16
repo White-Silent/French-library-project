@@ -17,7 +17,7 @@ import java.util.List;
 
 @Service
 public class BorrowService {
-    //Attribute
+
     @Autowired
     private BorrowDAO borrowDAO;
 
@@ -27,70 +27,117 @@ public class BorrowService {
     @Autowired
     private BookDAO bookDAO;
 
-    /*
-    //Cosntructor
-    public BorrowService(BorrowDAO borrowDAO) {
-        this.borrowDAO = borrowDAO;
-    }
+    /**
+     * Emprunter un livre
      */
-    //Method
-    //Borrow a book
     public void borrowBook(User user, Book book) throws SQLException {
-        if (user.getRole() == Role.READER){
-            LocalDate today = LocalDate.now();
-            LocalDate due = today.plusDays(14);
-            //Objet crée dans la mémoire mais rien dans la DB
-            Borrow borrow = new Borrow(user, book, today, due, BorrowStatus.BORROWED);
-            //A présent il est inscrit dans la DB
-            borrowDAO.borrowBook(borrow);
+        if (user.getRole() != Role.READER) {
+            throw new RuntimeException("Seuls les lecteurs peuvent emprunter des livres !");
         }
-        else {
-            throw new RuntimeException("Only Readers car borrow books !");
+
+        // Vérifier si l'utilisateur peut emprunter ce livre
+        if (!borrowDAO.canUserBorrowBook(user.getId(), book.getId())) {
+            throw new RuntimeException("Ce livre n'est pas disponible ou vous l'avez déjà emprunté");
         }
+
+        // Vérifier la limite d'emprunts (par exemple, max 5 livres)
+        int activeBorrows = borrowDAO.countActiveBorrowsByUser(user.getId());
+        if (activeBorrows >= 5) {
+            throw new RuntimeException("Vous avez atteint la limite de 5 emprunts simultanés");
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate dueDate = today.plusDays(14);
+
+        Borrow borrow = new Borrow(user, book, today, dueDate, BorrowStatus.BORROWED);
+        borrowDAO.borrowBook(borrow);
+
+        // Marquer le livre comme indisponible
+        bookDAO.updateBookAvailability(book.getId(), false);
     }
 
-    //Return a book
+    /**
+     * Retourner un livre
+     */
     public void returnBook(int borrowId) throws SQLException {
+        // D'abord, récupérer l'emprunt pour obtenir les informations du livre
+        Borrow borrow = getBorrowById(borrowId);
+        if (borrow == null) {
+            throw new RuntimeException("Emprunt non trouvé");
+        }
+
+        if (borrow.getStatus() == BorrowStatus.RETURNED) {
+            throw new RuntimeException("Ce livre a déjà été retourné");
+        }
+
+        // Retourner le livre
         LocalDate today = LocalDate.now();
         borrowDAO.returnBook(borrowId, today);
+
+        // Rendre le livre disponible
+        bookDAO.updateBookAvailability(borrow.getBook().getId(), true);
     }
 
-    //Get BorrowByUser ID
-    public List<Borrow> getBorrowByUser(int userId) throws SQLException {
-        return borrowDAO.getBorrowsByUser(userId);
+    /**
+     * Renouveler un emprunt
+     */
+    public void renewBook(int borrowId) throws SQLException {
+        Borrow borrow = getBorrowById(borrowId);
+        if (borrow == null) {
+            throw new RuntimeException("Emprunt non trouvé");
+        }
+
+        if (borrow.getStatus() != BorrowStatus.BORROWED) {
+            throw new RuntimeException("Seuls les emprunts actifs peuvent être renouvelés");
+        }
+
+        // Vérifier si le livre n'est pas en retard
+        if (LocalDate.now().isAfter(borrow.getDueDate())) {
+            throw new RuntimeException("Impossible de renouveler un livre en retard");
+        }
+
+        // Prolonger de 14 jours
+        LocalDate newDueDate = borrow.getDueDate().plusDays(14);
+        borrowDAO.renewBook(borrowId, newDueDate);
     }
 
-    // === GESTION DES EMPRUNTS ===
-
-    public List<Borrow> getActiveBorrowsByUser(int userId) throws SQLException {
-        return borrowDAO.getActiveBorrowsByUser(userId);
+    /**
+     * Récupérer un emprunt par son ID
+     */
+    public Borrow getBorrowById(int borrowId) throws SQLException {
+        // Cette méthode doit être implémentée dans BorrowDAO
+        return borrowDAO.getBorrowById(borrowId);
     }
 
+    /**
+     * Récupérer tous les emprunts d'un utilisateur
+     */
     public List<Borrow> getAllBorrowsByUser(int userId) throws SQLException {
         return borrowDAO.getBorrowsByUser(userId);
     }
 
     /**
-     * Emprunter un livre
+     * Récupérer les emprunts actifs d'un utilisateur
+     */
+    public List<Borrow> getActiveBorrowsByUser(int userId) throws SQLException {
+        return borrowDAO.getActiveBorrowsByUser(userId);
+    }
+
+    /**
+     * Emprunter un livre (méthode alternative avec IDs)
      */
     public void borrowBook(int userId, int bookId) throws SQLException {
-        // Vérifier que le livre est disponible
-        if (!bookDAO.isBookAvailable(bookId)) {
-            throw new RuntimeException("Ce livre n'est pas disponible");
-        }
-
-        // Créer l'emprunt
         User user = userDAO.getUserById(userId);
         Book book = bookDAO.getBookById(bookId);
 
-        Borrow borrow = new Borrow(
-                user,
-                book,
-                LocalDate.now(),
-                LocalDate.now().plusWeeks(2), // 2 semaines d'emprunt
-                BorrowStatus.BORROWED
-        );
+        if (user == null) {
+            throw new RuntimeException("Utilisateur non trouvé");
+        }
 
-        borrowDAO.borrowBook(borrow);
+        if (book == null) {
+            throw new RuntimeException("Livre non trouvé");
+        }
+
+        borrowBook(user, book);
     }
 }

@@ -21,7 +21,7 @@ public class BookDAO {
     }
 
     public void addBook(Book book) throws SQLException {
-        String sql = "INSERT INTO books (title, category, author, publisher, language, price , publicationDate, description) " + "VALUES (?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO books (title, category, author, publisher, language, price , publicationDate, description, available) " + "VALUES (?,?,?,?,?,?,?,?,?)";
 
         try (Connection connection = getConnection();
              PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -33,6 +33,7 @@ public class BookDAO {
             ps.setDouble(6, book.getPrice());
             ps.setString(7, book.getPublicationDate());
             ps.setString(8, book.getDescription());
+            ps.setBoolean(9, book.getAvailable());
             ps.executeUpdate();
 
             try (ResultSet generatedKeys = ps.getGeneratedKeys()){
@@ -84,12 +85,13 @@ public class BookDAO {
                 books.add(mapResultSetToBook(rs));
             }
         }
+        System.out.println("DEBUG DAO - getAllBooks: " + books.size() + " livres récupérés");
         return books;
     }
 
     public void updateBook(Book book) throws SQLException {
         String sql = "UPDATE books SET title = ?, category = ?, author = ?, publisher = ?, language = ?, " +
-                "price = ?, publicationDate = ?, description = ? WHERE id = ?";
+                "price = ?, publicationDate = ?, description = ?, available = ? WHERE id = ?";
 
         try (Connection connection = getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -101,7 +103,8 @@ public class BookDAO {
             ps.setDouble(6, book.getPrice());
             ps.setString(7, book.getPublicationDate());
             ps.setString(8, book.getDescription());
-            ps.setInt(9, book.getId());
+            ps.setBoolean(9, book.getAvailable());
+            ps.setInt(10, book.getId());
             ps.executeUpdate();
         }
     }
@@ -167,10 +170,8 @@ public class BookDAO {
     public List<Book> getAvailableBooks() throws SQLException {
         List<Book> availableBooks = new ArrayList<>();
         String sqlRequest = """
-                    SELECT DISTINCT b.* FROM books b
-                    WHERE b.id NOT IN (
-                    SELECT br.book_id FROM borrows br
-                    WHERE br.status IN ('BORROWED', 'LATE')
+                    SELECT * FROM books 
+                    WHERE available = TRUE;
                 """;
         try (Connection connection = getConnection();
              PreparedStatement ps = connection.prepareStatement(sqlRequest);
@@ -182,31 +183,14 @@ public class BookDAO {
         return availableBooks;
     }
 
-    //Vérifier si un livre spécifique est disponible
-    public boolean isBookAvailable(int bookId) throws SQLException {
-        String sql = """
-                   SELECT COUNT(*) FROM borrows
-                   WHERE book_id = ? AND status IN ('BORROWED', 'LATE')
-                """;
-        try (Connection connection = getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)){
-            ps.setInt(1, bookId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) == 0; //Disponible si aucun emprunt
-                }
-            }
-        }
-        return false;
-    }
+
 
     //Récupère tous les livres actuellement empruntées
     public List<Book> getBorrowedBooks() throws SQLException {
         List<Book> borrowedBooks = new ArrayList<>();
         String sql = """
-                SELECT DISTINCT b.* FROM books b
-                INNER JOIN borrows br on b.id = br.book_id
-                WHERE br.status IN ('BORROWED', 'LATE')  
+                SELECT * FROM books 
+                WHERE available = FALSE;
                 """;
         try (Connection connection = getConnection();
             PreparedStatement ps = connection.prepareStatement(sql);
@@ -221,10 +205,8 @@ public class BookDAO {
     //Count the number of books available
     public int countAvailableBooks() throws SQLException {
         String sql = """
-                SELECT COUNT(DISTINCT b.id) FROM books b
-                WHERE b.id NOT IN (
-                    SELECT br.book_id FROM borrows br
-                    WHERE br.status IN ('BORROWED', 'LATE'))
+                SELECT COUNT(*) FROM books
+                WHERE available = TRUE;
                 """;
         try (Connection connection = getConnection();
         PreparedStatement ps = connection.prepareStatement(sql);
@@ -260,4 +242,45 @@ public class BookDAO {
     }
 
 
+
+
+    /**
+     * Met à jour la disponibilité d'un livre
+     */
+    public void updateBookAvailability(int bookId, boolean available) throws SQLException {
+        String sql = "UPDATE books SET available = ? WHERE id = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setBoolean(1, available);
+            ps.setInt(2, bookId);
+
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected == 0) {
+                throw new SQLException("Aucun livre trouvé avec l'ID " + bookId);
+            }
+        }
+    }
+
+    /**
+     * Vérifie si un livre est disponible
+     */
+    public boolean isBookAvailable(int bookId) throws SQLException {
+        String sql = "SELECT available FROM books WHERE id = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setInt(1, bookId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getBoolean("available");
+                }
+            }
+        }
+
+        return false; // Par défaut, considérer comme non disponible si non trouvé
+    }
 }

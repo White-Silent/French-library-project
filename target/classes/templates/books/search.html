@@ -195,6 +195,8 @@
                         </div>
                         <div class="card-body">
                             <h5 class="card-title" th:text="${book.title}">Titre du livre</h5>
+                            <span class="badge" th:classappend="${book.available} ? 'bg-success' : 'bg-danger'"
+                                  th:text="${book.available} ? 'Disponible' : 'Emprunté'"></span>
                             <h6 class="card-subtitle mb-2 text-primary" th:text="${book.author}">Auteur</h6>
 
                             <!-- Informations du livre -->
@@ -223,6 +225,14 @@
                             <p class="card-text" th:if="${book.description != null and not #strings.isEmpty(book.description)}">
                                 <span th:text="${#strings.length(book.description) > 100} ? ${#strings.substring(book.description, 0, 100) + '...'} : ${book.description}">Description</span>
                             </p>
+
+                            <!-- État du livre -->
+                            <p class="card-text mt-2">
+                                <span class="badge" th:classappend="${book.available} ? 'bg-success' : 'bg-danger'"
+                                      th:text="${book.available} ? 'Disponible' : 'Emprunté'">
+                                </span>
+                            </p>
+
                         </div>
                         <div class="card-footer bg-transparent">
                             <div class="d-flex gap-2">

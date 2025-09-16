@@ -61,10 +61,15 @@ public class BookController {
         if (user == null) return "redirect:/login";
 
         try {
-            model.addAttribute("books", bookService.getAllBooks(user));
+            System.out.println("Nombre de livres récupérés pour l'utilisateur " + user.getUsername() );
+            List<Book> booksAll = bookService.getAllBooks();
+            System.out.println("Nombre de livres récupérés pour l'admin: " + booksAll.size());
+            model.addAttribute("books", booksAll);
+            //model.addAttribute("books", bookService.getAllBooks(user));
             model.addAttribute("user", user);
             return "books/manage";
         } catch (Exception e) {
+            System.out.println("ERREUR DE MANAGE !!!!!!!!");
             System.err.println("Erreur dans manageBooks: " + e.getMessage());
             e.printStackTrace();
             model.addAttribute("error", "Erreur lors du chargement: " + e.getMessage());

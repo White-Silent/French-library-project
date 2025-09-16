@@ -70,6 +70,11 @@
         .category-badge:hover {
             transform: scale(1.05);
         }
+        /* Style pour la catégorie active */
+        .category-badge.active-category {
+            background-color: #0d6efd !important;
+            color: #fff !important;
+        }
     </style>
 </head>
 <body>
@@ -159,9 +164,9 @@
         </div>
         <div class="card-body">
             <div class="d-flex flex-wrap gap-2">
-                    <span class="badge bg-primary category-badge" onclick="filterBooks('all')">
-                        Tous les livres
-                    </span>
+                <span class="badge bg-primary category-badge active-category" data-category="all" onclick="filterBooks('all', this)">
+                    Tous les livres
+                </span>
                 <!-- Les catégories seront générées dynamiquement par JavaScript -->
             </div>
         </div>
@@ -250,27 +255,33 @@
         const filterContainer = document.querySelector('.filter-card .card-body .d-flex');
         categories.forEach(category => {
             const badge = document.createElement('span');
-            badge.className = 'badge bg-outline-secondary category-badge';
+            badge.className = 'badge bg-secondary category-badge';
             badge.textContent = category;
-            badge.onclick = () => filterBooks(category);
+            badge.dataset.category = category;
+            badge.onclick = () => filterBooks(category, badge);
             badge.style.cursor = 'pointer';
             filterContainer.appendChild(badge);
         });
     });
 
-    // Fonction de filtrage
-    function filterBooks(category) {
+    // Fonction de filtrage améliorée
+    function filterBooks(category, clickedBadge) {
         const bookItems = document.querySelectorAll('.book-item');
         const badges = document.querySelectorAll('.category-badge');
 
-        // Réinitialiser les styles des badges
+        // Réinitialiser tous les badges
         badges.forEach(badge => {
-            badge.className = 'badge bg-outline-secondary category-badge';
+            badge.classList.remove('active-category', 'bg-primary');
+            badge.classList.add('bg-secondary');
         });
 
-        // Activer le badge sélectionné
-        event.target.className = 'badge bg-primary category-badge';
+        // Activer le badge cliqué
+        if (clickedBadge) {
+            clickedBadge.classList.remove('bg-secondary');
+            clickedBadge.classList.add('active-category', 'bg-primary');
+        }
 
+        // Filtrer les livres
         bookItems.forEach(item => {
             if (category === 'all' || item.dataset.category === category) {
                 item.style.display = 'block';

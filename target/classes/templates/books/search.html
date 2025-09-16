@@ -195,8 +195,6 @@
                         </div>
                         <div class="card-body">
                             <h5 class="card-title" th:text="${book.title}">Titre du livre</h5>
-                            <span class="badge" th:classappend="${book.available} ? 'bg-success' : 'bg-danger'"
-                                  th:text="${book.available} ? 'Disponible' : 'Emprunté'"></span>
                             <h6 class="card-subtitle mb-2 text-primary" th:text="${book.author}">Auteur</h6>
 
                             <!-- Informations du livre -->

@@ -203,7 +203,9 @@
 
                                         <!-- Actions -->
                                         <div class="mt-3 d-flex gap-2">
+
                                             <!-- Bouton Retourner -->
+
                                             <form th:action="@{/borrows/return/{id}(id=${borrow.id})}" method="post" class="d-inline">
                                                 <button th:if="${borrow.status.name() == 'BORROWED'}"
                                                         type="submit"
@@ -213,6 +215,16 @@
                                                     Retourner
                                                 </button>
                                             </form>
+
+                                            <!--
+                                            <button type="button"
+                                                    class="btn return-btn btn-sm flex-fill"
+                                                    data-borrow-id="${borrow.id}"
+                                                    onclick="returnBook(this)">
+                                                <i class="bi bi-arrow-return-left me-1"></i>
+                                                Retourner
+                                            </button>
+                                               -->
 
                                             <!-- Bouton Renouveler -->
                                             <form th:action="@{/borrows/renew/{id}(id=${borrow.id})}" method="post" class="d-inline">
@@ -336,20 +348,36 @@
         document.getElementById('lateCount').textContent = lateCount;
     }
 
+
     function returnBook(button) {
         const borrowId = button.getAttribute('data-borrow-id');
 
-        if (confirm('Êtes-vous sûr de vouloir retourner ce livre ?')) {
-            // Simulation d'une requête AJAX
-            button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Traitement...';
-            button.disabled = true;
+        if (!confirm('Voulez-vous retourner ce livre ?')) return;
 
-            // Simuler un délai
-            setTimeout(() => {
-                // Dans un vrai projet, vous feriez une requête AJAX vers votre backend
-                window.location.href = `/borrows/return/${borrowId}`;
-            }, 1000);
-        }
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Traitement...';
+
+        fetch(`/borrows/return/${borrowId}`, { method: 'POST' })
+            .then(response => {
+                if (response.ok) {
+                    const card = button.closest('.borrow-card');
+                    const badge = card.querySelector('.badge');
+                    badge.textContent = 'Retourné';
+                    badge.className = 'badge bg-success';
+
+                    // Mettre à jour les compteurs
+                    const activeCount = document.getElementById('activeCount');
+                    const returnedCount = document.getElementById('returnedCount');
+                    activeCount.textContent = parseInt(activeCount.textContent) - 1;
+                    returnedCount.textContent = parseInt(returnedCount.textContent) + 1;
+                } else {
+                    alert('Erreur lors du retour du livre');
+                }
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = '<i class="bi bi-arrow-return-left me-1"></i>Retourner';
+            });
     }
 
     function renewBook(button) {

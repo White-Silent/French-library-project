@@ -356,7 +356,7 @@ public class BookController {
             // Affichage de tous les livres si demandé ou si aucun critère
             if (showAll || (isEmptyOrNull(title) && isEmptyOrNull(author))) {
                 if (showAll) {
-                    System.out.println("Affichage de tous les livres demandé");
+                    System.out.println("Affichage de tous les livres demandé" + books.size());
                     books = bookService.getAllBooks(user);
                     searchType = null;  // Pas de recherche spécifique
                 }

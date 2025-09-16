@@ -31,6 +31,13 @@
             border-radius: 15px;
             padding: 2rem;
             text-align: center;
+            margin-bottom: 1rem;
+        }
+        .stat-card.secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .stat-card.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
         }
         .stat-icon {
             font-size: 3rem;
@@ -50,15 +57,19 @@
 </head>
 <body>
 <!-- Navigation -->
-<!-- Réutilise le navbar depuis un template -->
-
-<div th:replace="fragments/navbar :: navbar"></div>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <div class="container mt-4">
     <!-- Messages -->
     <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
         <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${success}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
@@ -71,11 +82,10 @@
                         <div class="col">
                             <h2 class="mb-0">
                                 <i class="bi bi-house-heart me-2"></i>
-                                <!-- A titre indicatif en haut de la page d'affichage -->
                                 Bienvenue, <span th:text="${user.username}"></span>!
                             </h2>
                             <p class="mb-0 opacity-75">
-                                Connecté en tant que <strong th:text="${user.getRole()}"></strong>
+                                Connecté en tant que <strong th:text="${user.role.name()}"></strong>
                             </p>
                         </div>
                         <div class="col-auto">
@@ -93,20 +103,27 @@
             <i class="bi bi-gear-fill me-2"></i>Panneau d'administration
         </h3>
 
-        <!-- Statistiques -->
+        <!-- Statistiques Admin -->
         <div class="row mb-4">
-            <div class="col-md-6">
+            <div class="col-md-4">
                 <div class="stat-card">
                     <i class="bi bi-journal-bookmark stat-icon"></i>
-                    <h3 th:text="${allBooks != null ? #lists.size(allBooks) : 0}"></h3>
-                    <p class="mb-0">Livres dans la bibliothèque</p>
+                    <h3 th:text="${totalBooks != null ? totalBooks : 0}"></h3>
+                    <p class="mb-0">Total des livres</p>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <i class="bi bi-people-fill stat-icon"></i>
-                    <h3>Système</h3>
-                    <p class="mb-0">Gestion complète</p>
+            <div class="col-md-4">
+                <div class="stat-card success">
+                    <i class="bi bi-check-circle stat-icon"></i>
+                    <h3 th:text="${availableBooks != null ? availableBooks : 0}"></h3>
+                    <p class="mb-0">Livres disponibles</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card secondary">
+                    <i class="bi bi-bookmark-heart stat-icon"></i>
+                    <h3 th:text="${borrowedBooks != null ? borrowedBooks : 0}"></h3>
+                    <p class="mb-0">Livres empruntés</p>
                 </div>
             </div>
         </div>
@@ -156,6 +173,7 @@
                                         <th>Titre</th>
                                         <th>Auteur</th>
                                         <th>Catégorie</th>
+                                        <th>Statut</th>
                                         <th>Actions</th>
                                     </tr>
                                     </thead>
@@ -165,6 +183,10 @@
                                         <td th:text="${book.author}"></td>
                                         <td>
                                             <span class="badge bg-secondary" th:text="${book.category}"></span>
+                                        </td>
+                                        <td>
+                                            <span th:if="${book.available}" class="badge bg-success">Disponible</span>
+                                            <span th:unless="${book.available}" class="badge bg-warning">Emprunté</span>
                                         </td>
                                         <td>
                                             <a th:href="@{/books/edit/{id}(id=${book.id})}"
@@ -199,26 +221,19 @@
             <i class="bi bi-book-heart me-2"></i>Mon espace lecteur
         </h3>
 
-        <!-- Statistiques -->
+        <!-- Statistiques Reader -->
         <div class="row mb-4">
             <div class="col-md-6">
                 <div class="stat-card">
                     <i class="bi bi-bookmark-heart stat-icon"></i>
-                    <h3 th:text="${myBorrows != null ? #lists.size(myBorrows) : 0}"></h3>
-                    <p class="mb-0">Livres empruntés</p>
+                    <h3 th:text="${activeBorrowsCount != null ? activeBorrowsCount : 0}"></h3>
+                    <p class="mb-0">Mes emprunts actifs</p>
                 </div>
             </div>
             <div class="col-md-6">
-                <!--
-                <div class="p-3">
-                    <i class="bi bi-journal-bookmark display-4 text-primary"></i>
-                    <h4 class="mt-2" th:text="${books != null ? #lists.size(books) : 0}"></h4>
-                    <p class="text-muted mb-0">Livres disponibles</p>
-                </div>
-                -->
-                <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="stat-card secondary">
                     <i class="bi bi-journal-bookmark stat-icon"></i>
-                    <h3 th:text="${books != null ? #lists.size(books) : 0}"></h3>
+                    <h3 th:text="${availableBooksCount != null ? availableBooksCount : 0}"></h3>
                     <p class="mb-0">Livres disponibles</p>
                 </div>
             </div>
@@ -271,17 +286,17 @@
                                             <p class="card-text">
                                                 <small class="text-muted">
                                                     Auteur: <span th:text="${borrow.book.author}"></span><br>
-                                                    Emprunté le: <span th:text="${borrow.borrowDate}"></span><br>
-                                                    À rendre le: <span th:text="${borrow.dueDate}"></span>
+                                                    Emprunté le: <span th:text="${#temporals.format(borrow.borrowDate, 'dd/MM/yyyy')}"></span><br>
+                                                    À rendre le: <span th:text="${#temporals.format(borrow.dueDate, 'dd/MM/yyyy')}"></span>
                                                 </small>
                                             </p>
-                                            <span class="badge bg-info" th:text="${borrow.status.dbValue}"></span>
+                                            <span class="badge bg-info" th:text="${borrow.status.name()}"></span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="text-center" th:if="${#lists.size(myBorrows) > 10}">
+                            <div class="text-center" th:if="${#lists.size(myBorrows) > 3}">
                                 <a href="/borrows/my" class="btn btn-primary">
                                     Voir tous mes emprunts (<span th:text="${#lists.size(myBorrows)}"></span>)
                                 </a>

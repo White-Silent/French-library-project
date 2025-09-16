@@ -5,6 +5,7 @@ import com.libraryproject.dao.BorrowDAO;
 import com.libraryproject.model.Book;
 import com.libraryproject.model.Borrow;
 import com.libraryproject.service.BookService;
+import com.libraryproject.service.BorrowService;
 import com.libraryproject.service.UserService;
 import com.libraryproject.dao.UserDAO;
 import com.libraryproject.model.User;
@@ -45,6 +46,9 @@ public class LoginController {
 
     @Autowired
     private BookService bookService;
+
+    @Autowired
+    private BorrowService borrowService;
 
     // Route racine - redirection vers login
     @GetMapping("/")
@@ -121,48 +125,82 @@ public class LoginController {
     // Ajoutez cette méthode dans votre LoginController existant
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model, HttpSession session) {
-        try {
-            // Récupérer l'utilisateur connecté
-            User user = (User) session.getAttribute("user");
-            if (user == null) return "redirect:/login";
-
-            model.addAttribute("user", user);
-
-            if (user.getRole().name().equals("ADMIN")) {
-                // === DASHBOARD ADMIN ===
-
-                // Tous les livres
-                List<Book> allBooks = bookDAO.getAllBooks();
-                model.addAttribute("allBooks", allBooks);
-
-                // Compter les livres disponibles
-                int availableBooksCount = bookDAO.countAvailableBooks();
-                model.addAttribute("availableBooksCount", availableBooksCount);
-
-                // Compter les livres empruntés
-                int borrowedBooksCount = allBooks.size() - availableBooksCount;
-                model.addAttribute("borrowedBooksCount", borrowedBooksCount);
-
-            } else if (user.getRole().name().equals("READER")) {
-                // === DASHBOARD READER ===
-
-                // Mes emprunts actifs
-                List<Borrow> myBorrows = borrowDAO.getBorrowsByUser(user.getId());
-                model.addAttribute("myBorrows", myBorrows);
-                model.addAttribute("books", bookService.getAvailableBooks());
-
-                // Compter les livres disponibles
-                int availableBooksCount = bookDAO.countAvailableBooks();
-                model.addAttribute("availableBooksCount", availableBooksCount);
-            }
-
-        } catch (SQLException e) {
-            model.addAttribute("error", "Erreur lors du chargement des données : " + e.getMessage());
-            e.printStackTrace();
+    public String dashboard(HttpSession session, Model model) {
+        User user = (User) session.getAttribute("user");
+        if (user == null) {
+            return "redirect:/login";
         }
 
-        return "dashboard";
+        try {
+            model.addAttribute("user", user);
+
+            if (user.getRole() == Role.ADMIN) {
+                // Dashboard ADMIN
+                setupAdminDashboard(user, model);
+            } else if (user.getRole() == Role.READER) {
+                // Dashboard READER
+                setupReaderDashboard(user, model);
+            }
+
+            return "dashboard";
+
+        } catch (Exception e) {
+            System.err.println("Erreur dans le dashboard: " + e.getMessage());
+            e.printStackTrace();
+            model.addAttribute("error", "Erreur lors du chargement du dashboard: " + e.getMessage());
+            return "dashboard";
+        }
+    }
+
+    private void setupAdminDashboard(User user, Model model) throws Exception {
+        try {
+            // Récupérer tous les livres pour l'admin
+            List<Book> allBooks = bookService.getAllBooks();
+            model.addAttribute("allBooks", allBooks);
+
+            // Statistiques pour l'admin
+            int totalBooks = allBooks.size();
+            int availableBooks = bookService.countAvailableBooks();
+            int borrowedBooks = totalBooks - availableBooks;
+
+            model.addAttribute("totalBooks", totalBooks);
+            model.addAttribute("availableBooks", availableBooks);
+            model.addAttribute("borrowedBooks", borrowedBooks);
+
+            System.out.println("Admin Dashboard - Total: " + totalBooks + ", Disponibles: " + availableBooks + ", Empruntés: " + borrowedBooks);
+
+        } catch (Exception e) {
+            System.err.println("Erreur dans setupAdminDashboard: " + e.getMessage());
+            throw e;
+        }
+    }
+
+    /**
+     * Configuration du dashboard pour les lecteurs
+     */
+    private void setupReaderDashboard(User user, Model model) throws Exception {
+        try {
+            // Récupérer les emprunts de l'utilisateur
+            List<Borrow> myBorrows = borrowService.getActiveBorrowsByUser(user.getId());
+            model.addAttribute("myBorrows", myBorrows);
+
+            // Récupérer les livres disponibles pour l'emprunt
+            List<Book> availableBooks = bookService.getAvailableBooks();
+            model.addAttribute("books", availableBooks);
+
+            // Statistiques pour le lecteur
+            int activeBorrowsCount = myBorrows.size();
+            int availableBooksCount = availableBooks.size();
+
+            model.addAttribute("activeBorrowsCount", activeBorrowsCount);
+            model.addAttribute("availableBooksCount", availableBooksCount);
+
+            System.out.println("Reader Dashboard - Emprunts actifs: " + activeBorrowsCount + ", Livres disponibles: " + availableBooksCount);
+
+        } catch (Exception e) {
+            System.err.println("Erreur dans setupReaderDashboard: " + e.getMessage());
+            throw e;
+        }
     }
 
     // Déconnexion

@@ -32,28 +32,81 @@ public class BorrowDAO {
     }
 
     // Crée un nouvel emprunt dans la base de données
+    // Méthode borrowBook corrigée dans BorrowDAO.java
+
     public void borrowBook(Borrow borrow) throws SQLException {
         String insertBorrow = "INSERT INTO borrows (user_id, book_id, borrow_date, due_date, status) VALUES (?,?,?,?,?)";
+        String updateBookAvailability = "UPDATE books SET available = ? WHERE id = ?";
 
-        try (Connection connection = getConnection()) {
-            connection.setAutoCommit(false);
+        Connection connection = null;
+        try {
+            connection = getConnection();
+            connection.setAutoCommit(false); // Début de transaction
 
-            try (PreparedStatement ps1 = connection.prepareStatement(insertBorrow)) {
-                // 1. Insertion de l'emprunt
+            // 1. Vérifier que le livre est encore disponible (pour éviter les conflits)
+            if (!bookDAO.isBookAvailable(borrow.getBook().getId())) {
+                throw new SQLException("Le livre n'est plus disponible");
+            }
+
+            // 2. Insertion de l'emprunt
+            try (PreparedStatement ps1 = connection.prepareStatement(insertBorrow, Statement.RETURN_GENERATED_KEYS)) {
                 ps1.setInt(1, borrow.getUser().getId());
                 ps1.setInt(2, borrow.getBook().getId());
                 ps1.setDate(3, java.sql.Date.valueOf(borrow.getBorrowDate()));
                 ps1.setDate(4, java.sql.Date.valueOf(borrow.getDueDate()));
                 ps1.setString(5, borrow.getStatus().name());
-                ps1.executeUpdate();
+
+                int rowsAffected = ps1.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new SQLException("Échec de l'insertion de l'emprunt");
+                }
+
+                // Récupérer l'ID généré pour l'emprunt
+                try (ResultSet generatedKeys = ps1.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        borrow.setId(generatedKeys.getInt(1));
+                    } else {
+                        throw new SQLException("Échec de récupération de l'ID d'emprunt");
+                    }
+                }
             }
 
-            // 2. Mise à jour du livre (on délègue au BookDAO)
-            bookDAO.updateBookAvailability(borrow.getBook().getId(), false);
+            // 3. Mise à jour de la disponibilité du livre
+            try (PreparedStatement ps2 = connection.prepareStatement(updateBookAvailability)) {
+                ps2.setBoolean(1, false); // Le livre devient indisponible
+                ps2.setInt(2, borrow.getBook().getId());
 
+                int rowsAffected = ps2.executeUpdate();
+                if (rowsAffected == 0) {
+                    throw new SQLException("Échec de mise à jour de la disponibilité du livre");
+                }
+            }
+
+            // 4. Valider la transaction
             connection.commit();
+            System.out.println("Emprunt créé avec succès - ID: " + borrow.getId());
+
         } catch (SQLException e) {
+            // En cas d'erreur, annuler la transaction
+            if (connection != null) {
+                try {
+                    connection.rollback();
+                    System.err.println("Transaction annulée suite à l'erreur: " + e.getMessage());
+                } catch (SQLException rollbackEx) {
+                    System.err.println("Erreur lors du rollback: " + rollbackEx.getMessage());
+                }
+            }
             throw e;
+        } finally {
+            // Remettre l'auto-commit et fermer la connexion
+            if (connection != null) {
+                try {
+                    connection.setAutoCommit(true);
+                    connection.close();
+                } catch (SQLException closeEx) {
+                    System.err.println("Erreur lors de la fermeture: " + closeEx.getMessage());
+                }
+            }
         }
     }
 

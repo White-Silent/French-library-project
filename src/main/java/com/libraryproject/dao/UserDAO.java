@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 //Indique à Spring que cela permet d'accéder aux données
@@ -36,6 +38,26 @@ public class UserDAO {
         char letter2 = (char) ('A' + rand.nextInt(26));
         int number = rand.nextInt(100);
         return String.format("%c%c%02d", letter1, letter2, number);
+    }
+
+    public List<User> getAllUsers() throws SQLException {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM users";
+
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                String username = rs.getString("username");
+                String password = rs.getString("password"); // si besoin
+                String role = rs.getString("role");
+                Role roleEnum = Role.valueOf(role);
+                users.add(new User( username, password, roleEnum)); // adapte selon ton constructeur
+            }
+        }
+
+        return users;
     }
 
     //Add a new User
@@ -100,6 +122,8 @@ public class UserDAO {
         }
         return null;
     }
+
+
 
     //Verify the authentification (plus de visa en base)
     public User authentificate(String username, String password, Role role) throws SQLException {

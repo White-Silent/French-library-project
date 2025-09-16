@@ -52,7 +52,7 @@ public class BorrowController {
             List<Borrow> userBorrow = borrowDAO.getAllActiveBorrows();
 
             model.addAttribute("userBorrow", userBorrow);
-
+            //model.addAttribute("canBorrow", bookService.isBookAvailable(borrowsUser.get(0).getBook().getId()));
             System.out.println("borrowUser size : " + borrowsUser.size());
             model.addAttribute("user", user);
             return "borrows/my-borrows";

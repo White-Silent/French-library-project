@@ -4,6 +4,7 @@ import com.libraryproject.dao.BookDAO;
 import com.libraryproject.dao.BorrowDAO;
 import com.libraryproject.model.Book;
 import com.libraryproject.model.Borrow;
+import com.libraryproject.service.BookService;
 import com.libraryproject.service.UserService;
 import com.libraryproject.dao.UserDAO;
 import com.libraryproject.model.User;
@@ -17,8 +18,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import jakarta.servlet.http.HttpSession;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+
+import static java.sql.DriverManager.getConnection;
 
 //Indique que cette classe gère les requêtes HTTP
 @Controller
@@ -37,6 +43,9 @@ public class LoginController {
     @Autowired
     private BorrowDAO borrowDAO;
 
+    @Autowired
+    private BookService bookService;
+
     // Route racine - redirection vers login
     @GetMapping("/")
     public String home() {
@@ -51,6 +60,15 @@ public class LoginController {
 
         model.addAttribute("visa", visa);
         model.addAttribute("roles", Role.values());
+        try {
+            List<User> users = userDAO.getAllUsers();
+            System.out.println("Nombre d'utilisateurs : " + users.size());
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
         return "login"; // correspond à login.html dans templates/
     }
 
@@ -130,8 +148,9 @@ public class LoginController {
                 // === DASHBOARD READER ===
 
                 // Mes emprunts actifs
-                List<Borrow> myBorrows = borrowDAO.getAllActiveBorrows();
+                List<Borrow> myBorrows = borrowDAO.getBorrowsByUser(user.getId());
                 model.addAttribute("myBorrows", myBorrows);
+                model.addAttribute("books", bookService.getAvailableBooks());
 
                 // Compter les livres disponibles
                 int availableBooksCount = bookDAO.countAvailableBooks();

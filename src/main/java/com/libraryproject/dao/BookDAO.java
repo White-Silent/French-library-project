@@ -247,19 +247,15 @@ public class BookDAO {
     /**
      * Met à jour la disponibilité d'un livre
      */
+
     public void updateBookAvailability(int bookId, boolean available) throws SQLException {
         String sql = "UPDATE books SET available = ? WHERE id = ?";
 
         try (Connection connection = getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
-
             ps.setBoolean(1, available);
             ps.setInt(2, bookId);
-
-            int rowsAffected = ps.executeUpdate();
-            if (rowsAffected == 0) {
-                throw new SQLException("Aucun livre trouvé avec l'ID " + bookId);
-            }
+            ps.executeUpdate();
         }
     }
 
@@ -275,12 +271,11 @@ public class BookDAO {
             ps.setInt(1, bookId);
 
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getBoolean("available");
+                if (!rs.next()) {
+                    throw new SQLException("Livre introuvable pour l'id " + bookId);
                 }
+                return rs.getBoolean("available");
             }
         }
-
-        return false; // Par défaut, considérer comme non disponible si non trouvé
     }
 }

@@ -33,20 +33,30 @@ public class BorrowDAO {
 
     // Crée un nouvel emprunt dans la base de données
     public void borrowBook(Borrow borrow) throws SQLException {
-        String sql = "INSERT INTO borrows (user_id, book_id, borrow_date, due_date, status) VALUES (?,?,?,?,?)";
-        // ↑ Requête paramétrée pour éviter les injections SQL
+        String insertBorrow = "INSERT INTO borrows (user_id, book_id, borrow_date, due_date, status) VALUES (?,?,?,?,?)";
 
-        try (Connection connection = getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)){
-            // Remplissage des paramètres
-            ps.setInt(1, borrow.getUser().getId());
-            ps.setInt(2, borrow.getBook().getId());
-            ps.setDate(3, java.sql.Date.valueOf(borrow.getBorrowDate()));
-            ps.setDate(4, java.sql.Date.valueOf(borrow.getDueDate()));
-            ps.setString(5, borrow.getStatus().name());
-            ps.executeUpdate(); // ← Exécution de l'INSERT
-        } // ← Fermeture automatique des ressources
+        try (Connection connection = getConnection()) {
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement ps1 = connection.prepareStatement(insertBorrow)) {
+                // 1. Insertion de l'emprunt
+                ps1.setInt(1, borrow.getUser().getId());
+                ps1.setInt(2, borrow.getBook().getId());
+                ps1.setDate(3, java.sql.Date.valueOf(borrow.getBorrowDate()));
+                ps1.setDate(4, java.sql.Date.valueOf(borrow.getDueDate()));
+                ps1.setString(5, borrow.getStatus().name());
+                ps1.executeUpdate();
+            }
+
+            // 2. Mise à jour du livre (on délègue au BookDAO)
+            bookDAO.updateBookAvailability(borrow.getBook().getId(), false);
+
+            connection.commit();
+        } catch (SQLException e) {
+            throw e;
+        }
     }
+
 
     // Marque un livre comme retourné
     public void returnBook(int borrowId, LocalDate returnDate) throws SQLException{

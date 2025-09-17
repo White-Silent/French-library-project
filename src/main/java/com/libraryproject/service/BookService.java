@@ -84,6 +84,14 @@ public class BookService {
         }
     }
 
+    public List<String> getAllCategories() throws Exception {
+        return bookDAO.getAllCategories();
+    }
+
+    public List<Book> searchBooks(String title, String author, String category, String language) throws Exception {
+        return bookDAO.searchBooks(title, author, category, language);
+    }
+
     /**
      * Récupérer tous les livres (ADMIN) ou seulement les disponibles (READER)
      */

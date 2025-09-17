@@ -38,6 +38,7 @@ public class BorrowController {
         return (User) session.getAttribute("user");
     }
 
+    /*
     // Mes emprunts (READER)
     @GetMapping("/my")
     public String myBorrows(HttpSession session, Model model) {
@@ -61,7 +62,32 @@ public class BorrowController {
             return "dashboard";
         }
     }
+     */
+    // Mes emprunts (READER)
+    @GetMapping("/my")
+    public String myBorrows(HttpSession session, Model model) {
+        User user = checkUserAccess(session);
+        if (user == null) return "redirect:/login";
 
+        try {
+            // Récupérer TOUS les emprunts de l'utilisateur (actifs ET retournés)
+            List<Borrow> borrowsUser = borrowService.getAllBorrowsByUser(user.getId());
+            model.addAttribute("borrows", borrowsUser);
+
+            // Optionnel: récupérer seulement les emprunts actifs si nécessaire
+            List<Borrow> activeBorrows = borrowService.getActiveBorrowsByUser(user.getId());
+            model.addAttribute("activeBorrows", activeBorrows);
+
+            System.out.println("borrowUser size : " + borrowsUser.size());
+            System.out.println("Active borrows size : " + activeBorrows.size());
+
+            model.addAttribute("user", user);
+            return "borrows/my-borrows";
+        } catch (Exception e) {
+            model.addAttribute("error", "Erreur lors du chargement: " + e.getMessage());
+            return "dashboard";
+        }
+    }
     // Catalogue des livres disponibles (READER)
     @GetMapping("/catalog")
     public String showCatalog(HttpSession session, Model model) {

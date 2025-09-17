@@ -88,6 +88,23 @@ public class BookDAO {
         return books;
     }
 
+    public List<String> getAllCategories() throws SQLException {
+        List<String> categories = new ArrayList<>();
+        String sqlRequest = "SELECT DISTINCT category FROM books order by category asc";
+        try (Connection connection = getConnection();
+        PreparedStatement ps = connection.prepareStatement(sqlRequest)) {
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String category = rs.getString("category");
+                    if (category != null) {
+                        categories.add(category);
+                    }
+                }
+            }
+        }
+        return categories;
+    }
+
     public void updateBook(Book book) throws SQLException {
         String sql = "UPDATE books SET title = ?, category = ?, author = ?, publisher = ?, language = ?, " +
                 "price = ?, publicationDate = ?, description = ?, available = ? WHERE id = ?";
@@ -324,6 +341,54 @@ public class BookDAO {
                 }
             }
         }
+        return books;
+    }
+
+    public List<Book> searchBooks(String title, String author, String category, String language) throws SQLException {
+        List<Book> books = new ArrayList<>();
+
+        // Requête de base
+        StringBuilder sql = new StringBuilder("SELECT * FROM books WHERE 1=1");
+
+        // Liste des valeurs pour PreparedStatement
+        List<Object> parameters = new ArrayList<>();
+
+        // Ajouter les filtres dynamiquement
+        if (title != null && !title.trim().isEmpty()) {
+            sql.append(" AND title LIKE ?");
+            parameters.add("%" + title.trim() + "%");
+        }
+
+        if (author != null && !author.trim().isEmpty()) {
+            sql.append(" AND author LIKE ?");
+            parameters.add("%" + author.trim() + "%");
+        }
+
+        if (category != null && !category.trim().isEmpty()) {
+            sql.append(" AND category = ?");
+            parameters.add(category.trim());
+        }
+
+        if (language != null && !language.trim().isEmpty()) {
+            sql.append(" AND language = ?");
+            parameters.add(language.trim());
+        }
+
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql.toString())) {
+
+            // Remplir les paramètres dynamiques
+            for (int i = 0; i < parameters.size(); i++) {
+                ps.setObject(i + 1, parameters.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    books.add(mapResultSetToBook(rs));
+                }
+            }
+        }
+
         return books;
     }
 

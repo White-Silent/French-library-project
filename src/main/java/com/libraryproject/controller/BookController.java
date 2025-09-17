@@ -13,7 +13,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpSession;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/books")
@@ -340,9 +343,48 @@ public class BookController {
     // Remplacez cette méthode dans votre BookController.java
 
     // Recherche de livres (accessible à tous) - VERSION AMÉLIORÉE
+    /*
+    @GetMapping("/search")
+    public String searchBooks(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String author,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String language,
+            HttpSession session,
+            Model model) {
+
+        User user = (User) session.getAttribute("user"); // facultatif si visiteurs autorisés
+
+        try {
+            // Appel au service qui gère tous les filtres dynamiques
+            List<Book> books = bookService.searchBooks(title, author, category, language);
+
+            model.addAttribute("books", books);
+            model.addAttribute("searchType", "Recherche avancée");
+
+            // Construire la chaîne de filtres pour affichage
+            List<String> filters = new ArrayList<>();
+            if (title != null && !title.isEmpty()) filters.add("Titre: " + title);
+            if (author != null && !author.isEmpty()) filters.add("Auteur: " + author);
+            if (category != null && !category.isEmpty()) filters.add("Catégorie: " + category);
+            if (language != null && !language.isEmpty()) filters.add("Langue: " + language);
+
+            model.addAttribute("searchTerm", String.join(", ", filters));
+            return "books/search";
+
+        }  catch (Exception e) {
+            // Gestion de toutes les autres exceptions
+            model.addAttribute("error", "Erreur inattendue : " + e.getMessage());
+            model.addAttribute("books", new ArrayList<>());
+            return "books/search";
+        }
+    }
+
+     */
     @GetMapping("/search")
     public String searchBooks(@RequestParam(required = false) String title,
                               @RequestParam(required = false) String author,
+                              @RequestParam(required = false) String category,
                               HttpSession session,
                               Model model) {
         User user = (User) session.getAttribute("user");
@@ -357,9 +399,14 @@ public class BookController {
                 model.addAttribute("books", bookService.findBookByAuthor(author));
                 model.addAttribute("searchType", "auteur");
                 model.addAttribute("searchTerm", author);
+            }
+            else if (category != null && !category.isEmpty()) {
+                List<String> categories = bookService.getAllCategories();
+                model.addAttribute("categories", categories);
             } else {
                 model.addAttribute("books", bookService.getAllBooks(user));
             }
+            //Appeler la méthode qui fait cela
 
             model.addAttribute("user", user);
             return "books/search";
@@ -369,6 +416,7 @@ public class BookController {
         }
 
     }
+
 
     // Méthode utilitaire pour vérifier si une chaîne est vide ou null
     private boolean isEmptyOrNull(String str) {

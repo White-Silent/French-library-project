@@ -65,6 +65,8 @@ public class BookController {
             List<Book> booksAll = bookService.getAllBooks();
             System.out.println("Nombre de livres récupérés pour l'admin: " + booksAll.size());
             model.addAttribute("books", booksAll);
+            model.addAttribute("availableCount", bookService.countAvailableBooks());
+            model.addAttribute("borrowedCount", bookService.countBorrowedBooks());
             //model.addAttribute("books", bookService.getAllBooks(user));
             model.addAttribute("user", user);
             return "books/manage";
@@ -89,6 +91,7 @@ public class BookController {
             // CORRECTION: Utilisation du constructeur par défaut
             model.addAttribute("book", new Book());
             model.addAttribute("user", user);
+
             return "books/add";
         } catch (Exception e) {
             System.err.println("Erreur dans showAddBookForm: " + e.getMessage());
@@ -340,64 +343,31 @@ public class BookController {
     @GetMapping("/search")
     public String searchBooks(@RequestParam(required = false) String title,
                               @RequestParam(required = false) String author,
-                              @RequestParam(required = false) boolean showAll,
                               HttpSession session,
                               Model model) {
         User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
-        }
+        if (user == null) return "redirect:/login";
 
         try {
-            List<Book> books = null;
-            String searchType = null;
-            String searchTerm = null;
-
-            // Affichage de tous les livres si demandé ou si aucun critère
-            if (showAll || (isEmptyOrNull(title) && isEmptyOrNull(author))) {
-                if (showAll) {
-                    System.out.println("Affichage de tous les livres demandé" + books.size());
-                    books = bookService.getAllBooks(user);
-                    searchType = null;  // Pas de recherche spécifique
-                }
-                // Si pas de showAll et pas de critères, on n'affiche rien (page d'accueil)
-            }
-            // Recherche par titre
-            else if (!isEmptyOrNull(title)) {
-                System.out.println("Recherche par titre: " + title);
-                books = bookService.findBookByTitle(title.trim());
-                searchType = "titre";
-                searchTerm = title.trim();
-            }
-            // Recherche par auteur
-            else if (!isEmptyOrNull(author)) {
-                System.out.println("Recherche par auteur: " + author);
-                books = bookService.findBookByAuthor(author.trim());
-                searchType = "auteur";
-                searchTerm = author.trim();
-            }
-
-            // Ajout des résultats au modèle
-            if (books != null) {
-                System.out.println("Nombre de livres trouvés: " + books.size());
-                model.addAttribute("books", books);
-
-                if (searchType != null) {
-                    model.addAttribute("searchType", searchType);
-                    model.addAttribute("searchTerm", searchTerm);
-                }
+            if (title != null && !title.isEmpty()) {
+                model.addAttribute("books", bookService.findBookByTitle(title));
+                model.addAttribute("searchType", "titre");
+                model.addAttribute("searchTerm", title);
+            } else if (author != null && !author.isEmpty()) {
+                model.addAttribute("books", bookService.findBookByAuthor(author));
+                model.addAttribute("searchType", "auteur");
+                model.addAttribute("searchTerm", author);
+            } else {
+                model.addAttribute("books", bookService.getAllBooks(user));
             }
 
             model.addAttribute("user", user);
             return "books/search";
-
         } catch (Exception e) {
-            System.err.println("Erreur dans searchBooks: " + e.getMessage());
-            e.printStackTrace();
             model.addAttribute("error", "Erreur lors de la recherche: " + e.getMessage());
-            model.addAttribute("user", user);
-            return "books/search";
+            return "dashboard";
         }
+
     }
 
     // Méthode utilitaire pour vérifier si une chaîne est vide ou null

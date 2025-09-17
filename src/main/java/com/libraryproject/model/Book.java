@@ -22,6 +22,7 @@ public class Book {
     private boolean available;
 
     // CONSTRUCTEUR PAR DÉFAUT - OBLIGATOIRE pour Spring Boot
+    /*
     public Book() {
         // Constructeur vide nécessaire pour Spring Boot et Thymeleaf
         // Initialisation avec des valeurs par défaut si nécessaire
@@ -34,6 +35,17 @@ public class Book {
         this.publicationDate = "";
         this.description = "";
         this.available = true;
+    }
+    */
+
+    private Integer currentBorrowCount; // Nombre d'emprunts en cours
+    private Integer totalBorrowCount;   // Nombre total d'emprunts historiques
+
+    // Constructeurs
+    public Book() {
+        this.available = true; // Par défaut disponible
+        this.currentBorrowCount = 0;
+        this.totalBorrowCount = 0;
     }
 
     //Constructor of the Book - for the creation of the Object
@@ -130,18 +142,68 @@ public class Book {
         this.available = available;
     }
 
-    //Method to String -> Easier to debug if there is some issue
+    // ✅ NOUVEAUX GETTERS ET SETTERS pour les statistiques
+    public Integer getCurrentBorrowCount() { return currentBorrowCount; }
+    public void setCurrentBorrowCount(Integer currentBorrowCount) {
+        this.currentBorrowCount = currentBorrowCount;
+    }
+
+    public Integer getTotalBorrowCount() { return totalBorrowCount; }
+    public void setTotalBorrowCount(Integer totalBorrowCount) {
+        this.totalBorrowCount = totalBorrowCount;
+    }
+
+    // ✅ MÉTHODES UTILITAIRES
+    /**
+     * Vérifie si le livre peut être supprimé (pas d'emprunts en cours)
+     */
+    public boolean canBeDeleted() {
+        return currentBorrowCount == null || currentBorrowCount == 0;
+    }
+
+    /**
+     * Vérifie si le livre a un historique d'emprunts
+     */
+    public boolean hasHistory() {
+        return totalBorrowCount != null && totalBorrowCount > 0;
+    }
+
+    /**
+     * Retourne le statut du livre sous forme de texte
+     */
+    public String getStatusText() {
+        if (currentBorrowCount != null && currentBorrowCount > 0) {
+            return "Emprunté (" + currentBorrowCount + " emprunt(s) en cours)";
+        } else if (available) {
+            return "Disponible";
+        } else {
+            return "Non disponible";
+        }
+    }
+
     @Override
     public String toString() {
-        return "Book [id=" + id
-                + ", title=" + title
-                + ", category=" + category
-                + ", author=" + author
-                + ", publisher=" + publisher
-                + ", language=" + language
-                + ", price=" + price
-                + ", publicationDate="
-                + publicationDate + ", description="
-                + description + "]";
+        return "Book{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", author='" + author + '\'' +
+                ", category='" + category + '\'' +
+                ", available=" + available +
+                ", currentBorrows=" + currentBorrowCount +
+                ", totalBorrows=" + totalBorrowCount +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Book book = (Book) o;
+        return id == book.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(id);
     }
 }

@@ -11,7 +11,7 @@
             background-color: #f8f9fa;
         }
         .page-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
             padding: 2rem 0;
             margin-bottom: 2rem;
@@ -29,13 +29,6 @@
         .action-btn {
             margin: 0.2rem;
         }
-        .search-box {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
         .book-table th {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -43,6 +36,10 @@
         }
         .book-row:hover {
             background-color: #f8f9fa;
+        }
+        .book-row.deleted {
+            opacity: 0.6;
+            background-color: #f8d7da;
         }
         .empty-state {
             text-align: center;
@@ -54,11 +51,17 @@
             margin-bottom: 1rem;
             opacity: 0.5;
         }
+        .status-badge {
+            font-size: 0.75rem;
+        }
+        .borrow-stats {
+            font-size: 0.7rem;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
 <!-- Navigation -->
-
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- Page Header -->
@@ -96,7 +99,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 
-    <!-- Statistiques -->
+    <!-- Statistiques améliorées -->
     <div class="row mb-4" th:if="${books}">
         <div class="col-md-4">
             <div class="card text-center border-primary">
@@ -111,8 +114,8 @@
             <div class="card text-center border-success">
                 <div class="card-body">
                     <i class="bi bi-check-circle display-4 text-success"></i>
-                    <h3 class="mt-2">Disponibles</h3>
-                    <p class="text-muted mb-0">Prêts à emprunter</p>
+                    <h3 class="mt-2" th:text="${availableCount != null ? availableCount : 0}">0</h3>
+                    <p class="text-muted mb-0">Disponibles</p>
                 </div>
             </div>
         </div>
@@ -120,8 +123,8 @@
             <div class="card text-center border-warning">
                 <div class="card-body">
                     <i class="bi bi-clock display-4 text-warning"></i>
-                    <h3 class="mt-2">Empruntés</h3>
-                    <p class="text-muted mb-0">En cours</p>
+                    <h3 class="mt-2" th:text="${borrowedCount != null ? borrowedCount : 0}">0</h3>
+                    <p class="text-muted mb-0">Empruntés</p>
                 </div>
             </div>
         </div>
@@ -137,7 +140,7 @@
         </div>
         <div class="card-body p-0">
             <!-- Table des livres -->
-            <div th:if="${books != null }" class="table-responsive">
+            <div th:if="${books != null}" class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="book-table">
                     <tr>
@@ -147,6 +150,7 @@
                         <th scope="col">Catégorie</th>
                         <th scope="col">Langue</th>
                         <th scope="col">Prix</th>
+                        <th scope="col">Statut</th>
                         <th scope="col">Actions</th>
                     </tr>
                     </thead>
@@ -170,8 +174,44 @@
                             <span th:if="${book.price == 0}" class="text-muted">Gratuit</span>
                         </td>
                         <td>
+                            <!-- Statut amélioré du livre -->
+                            <div>
+                                <!-- Badge principal de statut -->
+                                <span th:if="${book.available != null and book.available}"
+                                      class="badge bg-success status-badge">
+                                            <i class="bi bi-check-circle me-1"></i>Disponible
+                                        </span>
+                                <span th:if="${book.available != null and !book.available}"
+                                      class="badge bg-warning status-badge">
+                                            <i class="bi bi-clock me-1"></i>Emprunté
+                                        </span>
+                                <span th:if="${book.available == null}"
+                                      class="badge bg-secondary status-badge">
+                                            <i class="bi bi-question-circle me-1"></i>Indéfini
+                                        </span>
+
+                                <!-- Statistiques d'emprunt -->
+                                <div class="borrow-stats mt-1">
+                                    <small th:if="${book.currentBorrowCount != null and book.currentBorrowCount > 0}"
+                                           class="text-warning">
+                                        <i class="bi bi-clock me-1"></i>
+                                        <span th:text="${book.currentBorrowCount}">0</span> en cours
+                                    </small>
+                                    <small th:if="${book.totalBorrowCount != null and book.totalBorrowCount > 0}"
+                                           class="text-muted d-block">
+                                        <i class="bi bi-archive me-1"></i>
+                                        <span th:text="${book.totalBorrowCount}">0</span> total
+                                    </small>
+                                    <small th:if="${(book.currentBorrowCount == null or book.currentBorrowCount == 0) and (book.totalBorrowCount == null or book.totalBorrowCount == 0)}"
+                                           class="text-success">
+                                        <i class="bi bi-shield-check me-1"></i>Jamais emprunté
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
                             <div class="btn-group" role="group">
-                                <!-- Bouton d'édition - CORRECTION PRINCIPALE -->
+                                <!-- Bouton d'édition -->
                                 <a th:href="@{'/books/edit/' + ${book.id}}"
                                    class="btn btn-warning btn-sm action-btn"
                                    title="Modifier ce livre">
@@ -179,25 +219,27 @@
                                     Modifier
                                 </a>
 
-                                <!-- Bouton de suppression -->
-                                <!--
+                                <!-- Bouton de suppression - conditionnel -->
                                 <button type="button"
+                                        th:if="${book.currentBorrowCount == null or book.currentBorrowCount == 0}"
                                         class="btn btn-danger btn-sm action-btn"
-                                        th:onclick="'confirmDelete(' + ${book.id} + ', \'' + ${book.title} + '\')'"
-                                        title="Supprimer ce livre">
-                                    <i class="bi bi-trash"></i>
-                                    Supprimer
-                                </button>
-                                -->
-                                <button type="button"
-                                        class="btn btn-danger btn-sm action-btn"
-                                        th:attr="data-id=${book.id}, data-title=${book.title}"
+                                        th:attr="data-id=${book.id},
+                                                         data-title=${book.title},
+                                                         data-has-history=${book.totalBorrowCount != null and book.totalBorrowCount > 0},
+                                                         data-current-borrows=${book.currentBorrowCount}"
                                         onclick="confirmDelete(this)"
                                         title="Supprimer ce livre">
                                     <i class="bi bi-trash"></i>
                                     Supprimer
                                 </button>
 
+                                <!-- Message si suppression impossible -->
+                                <span th:if="${book.currentBorrowCount != null and book.currentBorrowCount > 0}"
+                                      class="btn btn-outline-secondary btn-sm disabled action-btn"
+                                      title="Impossible de supprimer : livre actuellement emprunté">
+                                            <i class="bi bi-lock"></i>
+                                            Emprunté
+                                        </span>
                             </div>
                         </td>
                     </tr>
@@ -219,7 +261,7 @@
     </div>
 </div>
 
-<!-- Modal de confirmation de suppression -->
+<!-- Modal de confirmation de suppression amélioré -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -233,19 +275,33 @@
             <div class="modal-body">
                 <p>Êtes-vous sûr de vouloir supprimer le livre :</p>
                 <p><strong id="bookTitle"></strong> ?</p>
+
+                <!-- Avertissement pour les livres avec historique -->
+                <div id="historyWarning" class="alert alert-warning" style="display: none;">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Attention :</strong> Ce livre a un historique d'emprunts. Il sera marqué comme supprimé mais l'historique sera conservé pour maintenir l'intégrité des données.
+                </div>
+
+                <!-- Information pour les livres sans historique -->
+                <div id="noHistoryInfo" class="alert alert-info" style="display: none;">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Ce livre n'a jamais été emprunté. Il sera supprimé définitivement de la base de données.
+                </div>
+
                 <p class="text-danger small">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Cette action est irréversible.
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    <span id="actionWarning">Cette action est irréversible.</span>
                 </p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>
                     Annuler
                 </button>
                 <form id="deleteForm" method="post" style="display: inline;">
                     <button type="submit" class="btn btn-danger">
                         <i class="bi bi-trash me-2"></i>
-                        Supprimer définitivement
+                        <span id="deleteButtonText">Supprimer définitivement</span>
                     </button>
                 </form>
             </div>
@@ -260,26 +316,39 @@
     function confirmDelete(button) {
         const bookId = button.dataset.id;
         const bookTitle = button.dataset.title;
+        const hasHistory = button.dataset.hasHistory === 'true';
+        const currentBorrows = parseInt(button.dataset.currentBorrows) || 0;
 
+        // Mettre à jour le titre du livre
         document.getElementById('bookTitle').textContent = bookTitle;
         document.getElementById('deleteForm').action = '/books/delete/' + bookId;
 
-        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        deleteModal.show();
-    }
+        // Gérer l'affichage des avertissements selon l'historique
+        const historyWarning = document.getElementById('historyWarning');
+        const noHistoryInfo = document.getElementById('noHistoryInfo');
+        const actionWarning = document.getElementById('actionWarning');
+        const deleteButtonText = document.getElementById('deleteButtonText');
 
-    /*
-    function confirmDelete(bookId, bookTitle) {
-        // Mettre à jour le contenu du modal
-        document.getElementById('bookTitle').textContent = bookTitle;
-        document.getElementById('deleteForm').action = '/books/delete/' + bookId;
+        if (hasHistory) {
+            // Livre avec historique = suppression logique
+            historyWarning.style.display = 'block';
+            noHistoryInfo.style.display = 'none';
+            actionWarning.textContent = 'Le livre sera marqué comme supprimé mais pourra être restauré.';
+            deleteButtonText.textContent = 'Marquer comme supprimé';
+        } else {
+            // Livre sans historique = suppression physique
+            historyWarning.style.display = 'none';
+            noHistoryInfo.style.display = 'block';
+            actionWarning.textContent = 'Cette action est irréversible.';
+            deleteButtonText.textContent = 'Supprimer définitivement';
+        }
 
         // Afficher le modal
         var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
         deleteModal.show();
     }
-    */
-    // Animation au chargement
+
+    // Animation au chargement améliorée
     document.addEventListener('DOMContentLoaded', function() {
         const rows = document.querySelectorAll('.book-row');
         rows.forEach((row, index) => {
@@ -289,7 +358,13 @@
                 row.style.transition = 'all 0.3s ease';
                 row.style.opacity = '1';
                 row.style.transform = 'translateY(0)';
-            }, index * 100);
+            }, index * 50); // Animation plus rapide
+        });
+
+        // Initialiser les tooltips Bootstrap si présents
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     });
 </script>

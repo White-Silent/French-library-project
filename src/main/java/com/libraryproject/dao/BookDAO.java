@@ -15,13 +15,12 @@ public class BookDAO {
     @Autowired
     private DataSource dataSource;
 
-    // Méthode pour obtenir une connexion
     private Connection getConnection() throws SQLException {
         return dataSource.getConnection();
     }
 
     public void addBook(Book book) throws SQLException {
-        String sql = "INSERT INTO books (title, category, author, publisher, language, price , publicationDate, description, available) " + "VALUES (?,?,?,?,?,?,?,?,?)";
+        String sql = "INSERT INTO books (title, category, author, publisher, language, price, publicationDate, description, available) VALUES (?,?,?,?,?,?,?,?,?)";
 
         try (Connection connection = getConnection();
              PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -36,8 +35,8 @@ public class BookDAO {
             ps.setBoolean(9, book.getAvailable());
             ps.executeUpdate();
 
-            try (ResultSet generatedKeys = ps.getGeneratedKeys()){
-                if (generatedKeys.next()){
+            try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                if (generatedKeys.next()) {
                     book.setId(generatedKeys.getInt(1));
                 }
             }
@@ -48,7 +47,7 @@ public class BookDAO {
         String sqlRequest = "SELECT * FROM books WHERE id = ?";
 
         try (Connection connection = getConnection();
-             PreparedStatement ps = connection.prepareStatement(sqlRequest)){
+             PreparedStatement ps = connection.prepareStatement(sqlRequest)) {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -109,16 +108,75 @@ public class BookDAO {
         }
     }
 
+    // ✅ CORRECTION MAJEURE : Gestion intelligente de la suppression
     public void deleteBook(int id) throws SQLException {
-        String sql = "DELETE FROM books where id = ?";
+        Connection connection = getConnection();
 
-        try (Connection connection = getConnection();
-             PreparedStatement ps = connection.prepareStatement(sql)) {
-            ps.setInt(1, id);
-            ps.executeUpdate();
+        try {
+            connection.setAutoCommit(false);
+
+            // 1. Vérifier si le livre est actuellement emprunté
+            String checkCurrentBorrows = """
+                SELECT COUNT(*) as count FROM borrows 
+                WHERE book_id = ? AND status IN ('BORROWED', 'LATE')
+                """;
+
+            try (PreparedStatement ps = connection.prepareStatement(checkCurrentBorrows)) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getInt("count") > 0) {
+                        throw new SQLException("Impossible de supprimer : livre actuellement emprunté");
+                    }
+                }
+            }
+
+            // 2. Vérifier s'il y a un historique d'emprunts
+            String checkHistory = "SELECT COUNT(*) as count FROM borrows WHERE book_id = ?";
+            boolean hasHistory = false;
+
+            try (PreparedStatement ps = connection.prepareStatement(checkHistory)) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        hasHistory = rs.getInt("count") > 0;
+                    }
+                }
+            }
+
+            if (hasHistory) {
+                // Si il y a un historique, faire une suppression logique
+                String logicalDelete = "UPDATE books SET available = false, title = CONCAT('[SUPPRIMÉ] ', title) WHERE id = ?";
+                try (PreparedStatement ps = connection.prepareStatement(logicalDelete)) {
+                    ps.setInt(1, id);
+                    int affected = ps.executeUpdate();
+                    if (affected == 0) {
+                        throw new SQLException("Aucun livre trouvé avec l'ID: " + id);
+                    }
+                }
+            } else {
+                // Pas d'historique, suppression physique possible
+                String physicalDelete = "DELETE FROM books WHERE id = ?";
+                try (PreparedStatement ps = connection.prepareStatement(physicalDelete)) {
+                    ps.setInt(1, id);
+                    int affected = ps.executeUpdate();
+                    if (affected == 0) {
+                        throw new SQLException("Aucun livre trouvé avec l'ID: " + id);
+                    }
+                }
+            }
+
+            connection.commit();
+
+        } catch (SQLException e) {
+            connection.rollback();
+            throw e;
+        } finally {
+            connection.setAutoCommit(true);
+            connection.close();
         }
     }
 
+    // ✅ CORRECTION CRITIQUE : mapResultSetToBook corrigé
     private Book mapResultSetToBook(ResultSet rs) throws SQLException {
         Book book = new Book(
                 rs.getString("title"),
@@ -131,7 +189,63 @@ public class BookDAO {
                 rs.getString("description")
         );
         book.setId(rs.getInt("id"));
+        // 🔥 CORRECTION PRINCIPALE : Récupération de la disponibilité
+        book.setAvailable(rs.getBoolean("available"));
         return book;
+    }
+
+    // ✅ NOUVELLE MÉTHODE : Vérifier les emprunts en cours
+    public boolean hasCurrentBorrows(int bookId) throws SQLException {
+        String sql = """
+            SELECT COUNT(*) as count FROM borrows 
+            WHERE book_id = ? AND status IN ('BORROWED', 'LATE')
+            """;
+
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("count") > 0;
+                }
+            }
+        }
+        return false;
+    }
+
+    // ✅ NOUVELLE MÉTHODE : Obtenir le nombre d'emprunts en cours
+    public int getCurrentBorrowCount(int bookId) throws SQLException {
+        String sql = """
+            SELECT COUNT(*) as count FROM borrows 
+            WHERE book_id = ? AND status IN ('BORROWED', 'LATE')
+            """;
+
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("count");
+                }
+            }
+        }
+        return 0;
+    }
+
+    // ✅ NOUVELLE MÉTHODE : Obtenir le nombre total d'emprunts
+    public int getTotalBorrowCount(int bookId) throws SQLException {
+        String sql = "SELECT COUNT(*) as count FROM borrows WHERE book_id = ?";
+
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("count");
+                }
+            }
+        }
+        return 0;
     }
 
     public List<Book> findBookByTitle(String title) throws SQLException {
@@ -166,13 +280,10 @@ public class BookDAO {
         return books;
     }
 
-    //Récupérer tous les livre disponibles non empruntées actuellement
     public List<Book> getAvailableBooks() throws SQLException {
         List<Book> availableBooks = new ArrayList<>();
-        String sqlRequest = """
-                    SELECT * FROM books 
-                    WHERE available = TRUE;
-                """;
+        String sqlRequest = "SELECT * FROM books WHERE available = TRUE";
+
         try (Connection connection = getConnection();
              PreparedStatement ps = connection.prepareStatement(sqlRequest);
              ResultSet rs = ps.executeQuery()) {
@@ -183,31 +294,35 @@ public class BookDAO {
         return availableBooks;
     }
 
-
-
-    //Récupère tous les livres actuellement empruntées
     public List<Book> getBorrowedBooks() throws SQLException {
         List<Book> borrowedBooks = new ArrayList<>();
-        String sql = """
-                SELECT * FROM books 
-                WHERE available = FALSE;
-                """;
+        String sql = "SELECT * FROM books WHERE available = FALSE";
+
         try (Connection connection = getConnection();
-            PreparedStatement ps = connection.prepareStatement(sql);
-            ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    borrowedBooks.add(mapResultSetToBook(rs));
-                }
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                borrowedBooks.add(mapResultSetToBook(rs));
+            }
         }
         return borrowedBooks;
     }
 
-    //Count the number of books available
     public int countAvailableBooks() throws SQLException {
-        String sql = """
-                SELECT COUNT(*) FROM books
-                WHERE available = TRUE;
-                """;
+        String sql = "SELECT COUNT(*) FROM books WHERE available = TRUE";
+
+        try (Connection connection = getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public int countBorrowedBooks() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM books WHERE available = FALSE";
         try (Connection connection = getConnection();
         PreparedStatement ps = connection.prepareStatement(sql);
         ResultSet rs = ps.executeQuery()) {
@@ -218,20 +333,17 @@ public class BookDAO {
         return 0;
     }
 
-    //Récupérer l'emprunt actuel d'un livre (s'il existe)
-    public Integer getCurrentBorrowId(int bookId) throws SQLException{
+    public Integer getCurrentBorrowId(int bookId) throws SQLException {
         String sql = """
                 SELECT id FROM borrows 
-                WHERE book_id = ? and   status IN ('BORROWED', 'LATE')
-                order by borrow_date DESC
+                WHERE book_id = ? AND status IN ('BORROWED', 'LATE')
+                ORDER BY borrow_date DESC
                 LIMIT 1
                 """;
-        // -> ouvre la connexion à la BDD
-        //Le try évite les fuites de mémoire
+
         try (Connection connection = getConnection();
-             // -> Prépare la requête SQL ils sont fermé dans le try
-        PreparedStatement ps = connection.prepareStatement(sql)){
-            ps.setInt(1, bookId); // Remplace le ? par l'id en argument
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setInt(1, bookId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt("id");
@@ -240,13 +352,6 @@ public class BookDAO {
         }
         return null;
     }
-
-
-
-
-    /**
-     * Met à jour la disponibilité d'un livre
-     */
 
     public void updateBookAvailability(int bookId, boolean available) throws SQLException {
         String sql = "UPDATE books SET available = ? WHERE id = ?";
@@ -259,17 +364,12 @@ public class BookDAO {
         }
     }
 
-    /**
-     * Vérifie si un livre est disponible
-     */
     public boolean isBookAvailable(int bookId) throws SQLException {
         String sql = "SELECT available FROM books WHERE id = ?";
 
         try (Connection connection = getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
-
             ps.setInt(1, bookId);
-
             try (ResultSet rs = ps.executeQuery()) {
                 if (!rs.next()) {
                     throw new SQLException("Livre introuvable pour l'id " + bookId);
@@ -278,4 +378,6 @@ public class BookDAO {
             }
         }
     }
+
+
 }

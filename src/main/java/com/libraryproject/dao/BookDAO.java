@@ -108,6 +108,49 @@ public class BookDAO {
         }
     }
 
+    public void deleteBook(int id) throws SQLException {
+        Connection connection = getConnection();
+
+        try {
+            connection.setAutoCommit(false);
+
+            // Vérifier si le livre est actuellement emprunté
+            String checkCurrentBorrows = """
+            SELECT COUNT(*) as count FROM borrows 
+            WHERE book_id = ? AND status IN ('BORROWED', 'LATE')
+            """;
+
+            try (PreparedStatement ps = connection.prepareStatement(checkCurrentBorrows)) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next() && rs.getInt("count") > 0) {
+                        throw new SQLException("Impossible de supprimer : livre actuellement emprunté");
+                    }
+                }
+            }
+
+            // Suppression physique directe
+            // Grâce à ON DELETE CASCADE, les enregistrements dans borrows seront automatiquement supprimés
+            String physicalDelete = "DELETE FROM books WHERE id = ?";
+            try (PreparedStatement ps = connection.prepareStatement(physicalDelete)) {
+                ps.setInt(1, id);
+                int affected = ps.executeUpdate();
+                if (affected == 0) {
+                    throw new SQLException("Aucun livre trouvé avec l'ID: " + id);
+                }
+            }
+
+            connection.commit();
+
+        } catch (SQLException e) {
+            connection.rollback();
+            throw e;
+        } finally {
+            connection.setAutoCommit(true);
+            connection.close();
+        }
+    }
+    /*
     // ✅ CORRECTION MAJEURE : Gestion intelligente de la suppression
     public void deleteBook(int id) throws SQLException {
         Connection connection = getConnection();
@@ -176,6 +219,8 @@ public class BookDAO {
         }
     }
 
+     */
+
     // ✅ CORRECTION CRITIQUE : mapResultSetToBook corrigé
     private Book mapResultSetToBook(ResultSet rs) throws SQLException {
         Book book = new Book(
@@ -231,6 +276,8 @@ public class BookDAO {
         }
         return 0;
     }
+
+
 
     // ✅ NOUVELLE MÉTHODE : Obtenir le nombre total d'emprunts
     public int getTotalBorrowCount(int bookId) throws SQLException {

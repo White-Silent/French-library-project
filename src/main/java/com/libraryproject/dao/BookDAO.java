@@ -344,9 +344,9 @@ public class BookDAO {
         return books;
     }
 
-    public List<Book> searchBooks(String title, String author, String category, String language) throws SQLException {
+    public List<Book> searchBooks(String title, String author) throws SQLException {
         List<Book> books = new ArrayList<>();
-
+        System.out.println("Tester que la méthode passe ici !");
         // Requête de base
         StringBuilder sql = new StringBuilder("SELECT * FROM books WHERE 1=1");
 
@@ -362,16 +362,6 @@ public class BookDAO {
         if (author != null && !author.trim().isEmpty()) {
             sql.append(" AND author LIKE ?");
             parameters.add("%" + author.trim() + "%");
-        }
-
-        if (category != null && !category.trim().isEmpty()) {
-            sql.append(" AND category = ?");
-            parameters.add(category.trim());
-        }
-
-        if (language != null && !language.trim().isEmpty()) {
-            sql.append(" AND language = ?");
-            parameters.add(language.trim());
         }
 
         try (Connection connection = getConnection();

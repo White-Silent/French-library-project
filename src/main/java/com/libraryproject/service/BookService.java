@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -57,6 +58,7 @@ public class BookService {
     /**
      * Récupérer tous les livres avec statistiques enrichies (ADMIN)
      */
+    /*
     public List<Book> getAllBooksWithStats() throws Exception {
         try {
             List<Book> books = bookDAO.getAllBooks();
@@ -83,18 +85,78 @@ public class BookService {
             throw new Exception("Erreur lors de la récupération des livres: " + e.getMessage());
         }
     }
-
+*/
     public List<String> getAllCategories() throws Exception {
         return bookDAO.getAllCategories();
     }
 
-    public List<Book> searchBooks(String title, String author, String category, String language) throws Exception {
-        return bookDAO.searchBooks(title, author, category, language);
+    public List<Book> searchBooks(String title, String author) throws Exception {
+        return bookDAO.searchBooks(title, author);
     }
 
+    // ✅ VERSION SIMPLIFIÉE TEMPORAIRE pour éviter les erreurs
+
+    /**
+     * Récupérer tous les livres avec statistiques enrichies (ADMIN)
+     * VERSION TEMPORAIRE SIMPLIFIÉE
+     */
+    public List<Book> getAllBooksWithStats() throws Exception {
+        try {
+            List<Book> books = bookDAO.getAllBooks();
+
+            // ✅ AJOUT DE VÉRIFICATION : Enrichir seulement si les méthodes existent
+            for (Book book : books) {
+                try {
+                    int currentBorrows = bookDAO.getCurrentBorrowCount(book.getId());
+                    int totalBorrows = bookDAO.getTotalBorrowCount(book.getId());
+
+                    // ✅ VÉRIFICATION : Ne faire cela que si les setters existent
+                    if (book.getClass().getMethod("setCurrentBorrowCount", Integer.class) != null) {
+                        book.setCurrentBorrowCount(currentBorrows);
+                        book.setTotalBorrowCount(totalBorrows);
+                    }
+                } catch (NoSuchMethodException e) {
+                    // Les méthodes n'existent pas encore, ignorer silencieusement
+                    System.out.println("Statistiques d'emprunt non disponibles pour le livre " + book.getId());
+                } catch (SQLException e) {
+                    System.err.println("Erreur lors de la récupération des stats pour le livre " + book.getId());
+                    // Continuer avec les autres livres
+                }
+            }
+
+            return books;
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération des livres: " + e.getMessage());
+            throw new Exception("Erreur lors de la récupération des livres: " + e.getMessage());
+        }
+    }
+
+    // ✅ VERSION ENCORE PLUS SIMPLE si la précédente ne marche pas
+    public List<Book> getAllBooksWithStatsSimple() throws Exception {
+        try {
+            // Retourner simplement tous les livres sans statistiques pour le moment
+            return bookDAO.getAllBooks();
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération des livres: " + e.getMessage());
+            throw new Exception("Erreur lors de la récupération des livres: " + e.getMessage());
+        }
+    }
+
+    // ✅ MODIFIEZ ÉGALEMENT cette méthode pour utiliser la version simple
+    public List<Book> getAllBooks() throws Exception {
+        try {
+            // TEMPORAIRE : utiliser la version simple
+            return bookDAO.getAllBooks();
+            // return getAllBooksWithStats(); // À réactiver plus tard
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération de tous les livres: " + e.getMessage());
+            throw new Exception("Erreur lors de la récupération de tous les livres: " + e.getMessage());
+        }
+    }
     /**
      * Récupérer tous les livres (ADMIN) ou seulement les disponibles (READER)
      */
+    /*
     public List<Book> getAllBooks(User user) throws Exception {
         try {
             if (user.getRole() == Role.ADMIN) {
@@ -109,10 +171,12 @@ public class BookService {
             throw new Exception("Erreur lors de la récupération des livres: " + e.getMessage());
         }
     }
+*/
 
     /**
      * Récupérer tous les livres (pour les statistiques admin)
      */
+    /*
     public List<Book> getAllBooks() throws Exception {
         try {
             return getAllBooksWithStats();
@@ -121,7 +185,7 @@ public class BookService {
             throw new Exception("Erreur lors de la récupération de tous les livres: " + e.getMessage());
         }
     }
-
+*/
     /**
      * Récupérer uniquement les livres disponibles
      */

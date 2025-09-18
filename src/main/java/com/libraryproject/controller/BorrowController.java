@@ -95,7 +95,7 @@ public class BorrowController {
         if (user == null) return "redirect:/login";
 
         try {
-            model.addAttribute("books", bookService.getAllBooks(user));
+            model.addAttribute("books", bookService.getAvailableBooks());
             model.addAttribute("user", user);
             model.addAttribute("canBorrow", user.getRole() == Role.READER);
             return "borrows/catalog";

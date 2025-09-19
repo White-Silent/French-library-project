@@ -1,55 +1,45 @@
 package com.libraryproject.model;
 
 import com.libraryproject.enums.BorrowStatus;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
-
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
-//Database book
+@Entity // ← AJOUTÉ : Dit à Spring que c'est une entité de base de données
+@Table(name = "books") // ← AJOUTÉ : Nom de la table
 public class Book {
-    //Attributes
+
+    @Id // ← AJOUTÉ : Clé primaire
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // ← AJOUTÉ : Auto-increment
     private int id;
+
+    @Column(nullable = false) // ← AJOUTÉ : Colonne obligatoire
     private String title;
+
     private String category;
     private String author;
     private String publisher;
     private String language;
     private double price;
     private String publicationDate;
+
+    @Column(length = 1000) // ← AJOUTÉ : Description plus longue
     private String description;
+
     private boolean available;
+    private Integer currentBorrowCount;
+    private Integer totalBorrowCount;
 
-    // CONSTRUCTEUR PAR DÉFAUT - OBLIGATOIRE pour Spring Boot
-    /*
+    // Constructeur par défaut - OBLIGATOIRE pour JPA
     public Book() {
-        // Constructeur vide nécessaire pour Spring Boot et Thymeleaf
-        // Initialisation avec des valeurs par défaut si nécessaire
-        this.title = "";
-        this.category = "";
-        this.author = "";
-        this.publisher = "";
-        this.language = "";
-        this.price = 0.0;
-        this.publicationDate = "";
-        this.description = "";
         this.available = true;
-    }
-    */
-
-    private Integer currentBorrowCount; // Nombre d'emprunts en cours
-    private Integer totalBorrowCount;   // Nombre total d'emprunts historiques
-
-    // Constructeurs
-    public Book() {
-        this.available = true; // Par défaut disponible
         this.currentBorrowCount = 0;
         this.totalBorrowCount = 0;
     }
 
-    //Constructor of the Book - for the creation of the Object
-    public Book(String title, String category, String author, String publisher, String language, double price, String publicationDate, String description) {
+    // Constructor avec paramètres
+    public Book(String title, String category, String author, String publisher,
+                String language, double price, String publicationDate, String description) {
         this.title = title;
         this.category = category;
         this.author = author;
@@ -59,118 +49,56 @@ public class Book {
         this.publicationDate = publicationDate;
         this.description = description;
         this.available = true;
+        this.currentBorrowCount = 0;
+        this.totalBorrowCount = 0;
     }
 
-    //Add Getter and Setter - for all of these attributes
-    public int getId(){
-        return id;
-    }
+    // Tous vos getters et setters restent identiques...
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public void setId(int id){
-        this.id = id;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public String getTitle(){
-        return title;
-    }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
-    public void setTitle(String title){
-        this.title = title;
-    }
+    public String getAuthor() { return author; }
+    public void setAuthor(String author) { this.author = author; }
 
-    public String getCategory(){
-        return category;
-    }
+    public String getPublisher() { return publisher; }
+    public void setPublisher(String publisher) { this.publisher = publisher; }
 
-    public void setCategory(String category){
-        this.category = category;
-    }
+    public String getLanguage() { return language; }
+    public void setLanguage(String language) { this.language = language; }
 
-    public String getAuthor(){
-        return author;
-    }
+    public double getPrice() { return price; }
+    public void setPrice(double price) { this.price = price; }
 
-    public void setAuthor(String author){
-        this.author = author;
-    }
+    public String getPublicationDate() { return publicationDate; }
+    public void setPublicationDate(String publicationDate) { this.publicationDate = publicationDate; }
 
-    public String getPublisher(){
-        return publisher;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setPublisher(String publisher){
-        this.publisher = publisher;
-    }
+    public boolean getAvailable() { return available; }
+    public void setAvailable(boolean available) { this.available = available; }
 
-    public String getLanguage(){
-        return language;
-    }
-
-    public void setLanguage(String language){
-        this.language = language;
-    }
-
-    public double getPrice(){
-        return price;
-    }
-
-    public void setPrice(double price){
-        this.price = price;
-    }
-
-    public String getPublicationDate(){
-        return publicationDate;
-    }
-
-    public void setPublicationDate(String publicationDate){
-        this.publicationDate = publicationDate;
-    }
-
-    public String getDescription(){
-        return description;
-    }
-
-    public void setDescription(String description){
-        this.description = description;
-    }
-
-    public boolean getAvailable(){
-        return available;
-    }
-
-    public void setAvailable(boolean available){
-        this.available = available;
-    }
-
-    // ✅ NOUVEAUX GETTERS ET SETTERS pour les statistiques
     public Integer getCurrentBorrowCount() { return currentBorrowCount; }
-    public void setCurrentBorrowCount(Integer currentBorrowCount) {
-        this.currentBorrowCount = currentBorrowCount;
-    }
+    public void setCurrentBorrowCount(Integer currentBorrowCount) { this.currentBorrowCount = currentBorrowCount; }
 
     public Integer getTotalBorrowCount() { return totalBorrowCount; }
-    public void setTotalBorrowCount(Integer totalBorrowCount) {
-        this.totalBorrowCount = totalBorrowCount;
-    }
+    public void setTotalBorrowCount(Integer totalBorrowCount) { this.totalBorrowCount = totalBorrowCount; }
 
-    // ✅ MÉTHODES UTILITAIRES
-    /**
-     * Vérifie si le livre peut être supprimé (pas d'emprunts en cours)
-     */
+    // Méthodes utilitaires restent identiques
     public boolean canBeDeleted() {
         return currentBorrowCount == null || currentBorrowCount == 0;
     }
 
-    /**
-     * Vérifie si le livre a un historique d'emprunts
-     */
     public boolean hasHistory() {
         return totalBorrowCount != null && totalBorrowCount > 0;
     }
 
-    /**
-     * Retourne le statut du livre sous forme de texte
-     */
     public String getStatusText() {
         if (currentBorrowCount != null && currentBorrowCount > 0) {
             return "Emprunté (" + currentBorrowCount + " emprunt(s) en cours)";

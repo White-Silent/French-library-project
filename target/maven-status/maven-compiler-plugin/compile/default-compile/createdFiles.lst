@@ -1,4 +1,5 @@
 com/libraryproject/enums/Role.class
+com/libraryproject/controller/EnvCheckController.class
 com/libraryproject/controller/BookController.class
 com/libraryproject/dao/UserDAO.class
 com/libraryproject/service/BookService.class

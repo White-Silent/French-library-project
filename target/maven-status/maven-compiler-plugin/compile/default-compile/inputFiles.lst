@@ -1,6 +1,7 @@
 /home/raphael/French-Library-Project/src/main/java/com/libraryproject/LibraryWebApplication.java
 /home/raphael/French-Library-Project/src/main/java/com/libraryproject/controller/BookController.java
 /home/raphael/French-Library-Project/src/main/java/com/libraryproject/controller/BorrowController.java
+/home/raphael/French-Library-Project/src/main/java/com/libraryproject/controller/EnvCheckController.java
 /home/raphael/French-Library-Project/src/main/java/com/libraryproject/controller/LoginController.java
 /home/raphael/French-Library-Project/src/main/java/com/libraryproject/dao/BookDAO.java
 /home/raphael/French-Library-Project/src/main/java/com/libraryproject/dao/BorrowDAO.java

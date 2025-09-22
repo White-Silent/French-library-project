@@ -1,3 +1,22 @@
+CREATE TABLE IF NOT EXISTS users (
+                                     id INT AUTO_INCREMENT PRIMARY KEY,
+                                     username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL
+    );
+
+CREATE TABLE IF NOT EXISTS books (
+                                     id INT AUTO_INCREMENT PRIMARY KEY,
+                                     title VARCHAR(255) NOT NULL,
+    category VARCHAR(100),
+    author VARCHAR(100),
+    publisher VARCHAR(100),
+    language VARCHAR(50),
+    price DECIMAL(10,2),
+    publication DATE,
+    description TEXT,
+    available BOOLEAN
+    );
 -- ----------------------------
 -- Insertion des utilisateurs
 -- ----------------------------
@@ -11,7 +30,7 @@ INSERT INTO users (username, password, role) VALUES
 -- ----------------------------
 -- Insertion des livres
 -- ----------------------------
-INSERT INTO books (title, category, author, publisher, language, price, publication_date, description, available) VALUES
+INSERT INTO books (title, category, author, publisher, language, price, publication, description, available) VALUES
                                                                                                                       ('Le Petit Prince', 'Fiction', 'Antoine de Saint-Exupéry', 'Gallimard', 'Français', 12.99, '1943-04-06', 'Un conte poétique et philosophique sous l''apparence d''un conte pour enfants.', true),
                                                                                                                       ('1984', 'Science-Fiction', 'George Orwell', 'Secker & Warburg', 'Anglais', 15.50, '1949-06-08', 'Un roman dystopique qui dépeint une société totalitaire.', true),
                                                                                                                       ('L''Étranger', 'Philosophie', 'Albert Camus', 'Gallimard', 'Français', 14.20, '1942-01-01', 'Premier roman publié par Albert Camus en 1942.', true),

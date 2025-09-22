@@ -1,9 +1,6 @@
 package com.libraryproject.model;
 
-import com.libraryproject.enums.BorrowStatus;
 import jakarta.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity // ← AJOUTÉ : Dit à Spring que c'est une entité de base de données
 @Table(name = "books") // ← AJOUTÉ : Nom de la table
@@ -21,8 +18,7 @@ public class Book {
     private String publisher;
     private String language;
     private double price;
-    @Column(name = "publication_date")
-    private String publicationDate;
+    private String publication;
 
     @Column(length = 1000) // ← AJOUTÉ : Description plus longue
     private String description;
@@ -47,7 +43,7 @@ public class Book {
         this.publisher = publisher;
         this.language = language;
         this.price = price;
-        this.publicationDate = publicationDate;
+        this.publication = publicationDate;
         this.description = description;
         this.available = true;
         this.currentBorrowCount = 0;
@@ -76,8 +72,8 @@ public class Book {
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
 
-    public String getPublicationDate() { return publicationDate; }
-    public void setPublicationDate(String publicationDate) { this.publicationDate = publicationDate; }
+    public String getPublication() { return publication; }
+    public void setPublication(String publicationDate) { this.publication = publicationDate; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }

@@ -226,9 +226,9 @@
                     </div>
                     <div class="card-footer bg-transparent">
                         <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted" th:if="${book.publicationDate != null and !book.publicationDate.isEmpty()}">
+                            <small class="text-muted" th:if="${book.publication != null and !book.publication.isEmpty()}">
                                 <i class="bi bi-calendar me-1"></i>
-                                <span th:text="${book.publicationDate}"></span>
+                                <span th:text="${book.publication}"></span>
                             </small>
                             <div th:if="${canBorrow}">
                                 <form th:action="@{/borrows/borrow/{id}(id=${book.id})}" method="post" class="d-inline">

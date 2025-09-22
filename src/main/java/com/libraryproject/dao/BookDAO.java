@@ -30,7 +30,7 @@ public class BookDAO {
             ps.setString(4, book.getPublisher());
             ps.setString(5, book.getLanguage());
             ps.setDouble(6, book.getPrice());
-            ps.setString(7, book.getPublicationDate());
+            ps.setString(7, book.getPublication());
             ps.setString(8, book.getDescription());
             ps.setBoolean(9, book.getAvailable());
             ps.executeUpdate();
@@ -107,7 +107,7 @@ public class BookDAO {
 
     public void updateBook(Book book) throws SQLException {
         String sql = "UPDATE books SET title = ?, category = ?, author = ?, publisher = ?, language = ?, " +
-                "price = ?, publicationDate = ?, description = ?, available = ? WHERE id = ?";
+                "price = ?, publication = ?, description = ?, available = ? WHERE id = ?";
 
         try (Connection connection = getConnection();
              PreparedStatement ps = connection.prepareStatement(sql)) {
@@ -117,7 +117,7 @@ public class BookDAO {
             ps.setString(4, book.getPublisher());
             ps.setString(5, book.getLanguage());
             ps.setDouble(6, book.getPrice());
-            ps.setString(7, book.getPublicationDate());
+            ps.setString(7, book.getPublication());
             ps.setString(8, book.getDescription());
             ps.setBoolean(9, book.getAvailable());
             ps.setInt(10, book.getId());
@@ -247,7 +247,7 @@ public class BookDAO {
                 rs.getString("publisher"),
                 rs.getString("language"),
                 rs.getDouble("price"),
-                rs.getString("publicationDate"),
+                rs.getString("publication"),
                 rs.getString("description")
         );
         book.setId(rs.getInt("id"));

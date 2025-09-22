@@ -225,10 +225,10 @@
                                 </small>
                             </p>
 
-                            <p class="card-text" th:if="${book.publicationDate != null and not #strings.isEmpty(book.publicationDate)}">
+                            <p class="card-text" th:if="${book.publication != null and not #strings.isEmpty(book.publication)}">
                                 <small class="text-muted">
                                     <i class="bi bi-calendar me-1"></i>
-                                    Publié: <span th:text="${book.publicationDate}">Date</span>
+                                    Publié: <span th:text="${book.publication}">Date</span>
                                 </small>
                             </p>
 
@@ -339,8 +339,8 @@
                                 <span th:if="${book.price > 0}" th:text="${book.price + ' €'}">0 €</span>
                                 <span th:if="${book.price == 0}" class="text-success">Gratuit</span>
                             </p>
-                            <p th:if="${book.publicationDate != null and not #strings.isEmpty(book.publicationDate)}">
-                                <strong>Date de publication:</strong> <span th:text="${book.publicationDate}">Date</span>
+                            <p th:if="${book.publication != null and not #strings.isEmpty(book.publication)}">
+                                <strong>Date de publication:</strong> <span th:text="${book.publication}">Date</span>
                             </p>
                         </div>
                     </div>

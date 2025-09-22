@@ -1,6 +1,6 @@
 
-ALTER TABLE books
-    CHANGE COLUMN publication publication_date DATE;
+ALTER TABLE books CHANGE COLUMN publication_date publication VARCHAR(255);
+
 
 CREATE TABLE IF NOT EXISTS users (
                                      id INT AUTO_INCREMENT PRIMARY KEY,

@@ -21,6 +21,7 @@ public class Book {
     private String publisher;
     private String language;
     private double price;
+    @Column(name = "publication_date")
     private String publicationDate;
 
     @Column(length = 1000) // ← AJOUTÉ : Description plus longue
